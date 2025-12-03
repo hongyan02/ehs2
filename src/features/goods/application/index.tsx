@@ -201,7 +201,6 @@ export default function ApplicationView() {
         <>
           <ApplicationTable
             data={data?.data || []}
-            onEdit={handleEdit}
             onDelete={handleDelete}
             onSubmit={handleSubmitApplication}
             submittingId={submittingId}
