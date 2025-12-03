@@ -1,0 +1,237 @@
+"use client";
+
+import { useState } from "react";
+import SearchForm, { type SearchFormData } from "./components/searchForm";
+import LogTable from "./components/logTable";
+import CustomPagination from "@/components/CustomPagination";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  useDutyLogs,
+  useDeleteDutyLog,
+  useCreateDutyLog,
+  type DutyLogData,
+} from "./query";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import LogForm from "./components/logForm";
+import { TiptapEditor } from "@/components/TiptapEditor";
+
+export default function DutyLogView() {
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [searchParams, setSearchParams] = useState<SearchFormData>({});
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [viewLog, setViewLog] = useState<DutyLogData | null>(null);
+
+  // 查询数据
+  const { data, isLoading, error } = useDutyLogs({
+    page,
+    pageSize,
+    ...searchParams,
+  });
+
+  // 删除mutation
+  const deleteMutation = useDeleteDutyLog();
+  // 创建mutation
+  const createMutation = useCreateDutyLog();
+
+  const handleSearch = (params: SearchFormData) => {
+    setSearchParams(params);
+    setPage(1); // 重置到第一页
+  };
+
+  const handleReset = () => {
+    setSearchParams({});
+    setPage(1);
+  };
+
+  const handleView = (log: DutyLogData) => {
+    setViewLog(log);
+  };
+
+  const handleDelete = (id: number) => {
+    setDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteId === null) return;
+
+    try {
+      await deleteMutation.mutateAsync(deleteId);
+      toast.success("删除成功");
+      setDeleteId(null);
+    } catch (error) {
+      toast.error("删除失败");
+    }
+  };
+
+  const handleCreate = async (data: DutyLogData) => {
+    try {
+      await createMutation.mutateAsync(data);
+      setIsCreateOpen(false);
+      toast.success("创建成功");
+    } catch (error) {
+      console.error(error);
+      toast.error("创建失败");
+    }
+  };
+
+  return (
+    <div className="space-y-6 p-6">
+      {/* 查询表单与操作 */}
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="flex-1 min-w-[280px]">
+          <SearchForm onSearch={handleSearch} onReset={handleReset} />
+        </div>
+        <div className="ml-auto">
+          <Button onClick={() => setIsCreateOpen(true)}>新增日志</Button>
+        </div>
+      </div>
+
+      {/* 数据表格 */}
+      {isLoading ? (
+        <div className="text-center py-8">加载中...</div>
+      ) : error ? (
+        <div className="text-center py-8 text-red-500">加载失败</div>
+      ) : (
+        <>
+          <LogTable
+            data={data?.data || []}
+            onView={handleView}
+            onDelete={handleDelete}
+          />
+
+          {/* 分页器 */}
+          <CustomPagination
+            page={page}
+            pageSize={pageSize}
+            total={data?.total || 0}
+            onChange={setPage}
+            className="mt-4 justify-end"
+          />
+        </>
+      )}
+
+      {/* 新增日志弹窗 */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="min-w-[70vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>新增值班日志</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <LogForm
+              onSubmit={handleCreate}
+              isLoading={createMutation.isPending}
+              onCancel={() => setIsCreateOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 删除确认弹窗 */}
+      <AlertDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除?</AlertDialogTitle>
+            <AlertDialogDescription>
+              此操作无法撤销。这将永久删除该值班日志记录。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              确认删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 查看日志弹窗 */}
+      <Dialog
+        open={!!viewLog}
+        onOpenChange={(open) => !open && setViewLog(null)}
+      >
+        <DialogContent className="min-w-[70vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>查看值班日志</DialogTitle>
+          </DialogHeader>
+          {viewLog && (
+            <div className="space-y-4 mt-4">
+              {/* 基本信息 */}
+              <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium text-gray-600">
+                    日期：
+                  </span>
+                  <span className="text-sm">{viewLog.date}</span>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600">
+                    班次：
+                  </span>
+                  <span className="text-sm">
+                    {viewLog.shift === 0 ? "白班" : "夜班"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600">
+                    姓名：
+                  </span>
+                  <span className="text-sm">{viewLog.name}</span>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600">
+                    工号：
+                  </span>
+                  <span className="text-sm">{viewLog.no}</span>
+                </div>
+              </div>
+
+              {/* 日志内容 */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">日志内容</label>
+                <TiptapEditor
+                  value={viewLog.log}
+                  disabled
+                  placeholder="无日志内容"
+                />
+              </div>
+
+              {/* 待办事项 */}
+              {viewLog.todo && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">待办事项</label>
+                  <div className="p-3 bg-gray-50 rounded-lg text-sm">
+                    {viewLog.todo}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

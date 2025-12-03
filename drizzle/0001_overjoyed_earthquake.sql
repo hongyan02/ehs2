@@ -1,0 +1,1 @@
+ALTER TABLE `dutySchedule` ADD `position` text;

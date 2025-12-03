@@ -1,0 +1,33 @@
+export const API_SERVICE = {
+  //登陆
+  login: {
+    login: process.env.NEXT_PUBLIC_API_CONFIG_IMS + "/login", //登陆
+    logout: process.env.NEXT_PUBLIC_API_CONFIG_IMS + "/logout", //登出
+  },
+  //用户信息相关
+  userInfo: {
+    getInfo: process.env.NEXT_PUBLIC_API_CONFIG_IMS + "/getInfo", //获取用户信息
+    list: process.env.NEXT_PUBLIC_API_CONFIG_IMS + "/system/user/list", //获取用户列表
+  },
+  //值班日志
+  dutyLog: {
+    dutyLog: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/dutyLog", //CRUD操作
+  },
+  dutyPerson: {
+    dutyPerson: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/dutyPerson", //值班人员CRUD
+  },
+  //值班表
+  dutySchedule: {
+    getDutySchedule:
+      process.env.NEXT_PUBLIC_API_CONFIG + "/duty-schedules/query", //查询值班表
+    dutySchedule: process.env.NEXT_PUBLIC_API_CONFIG + "/duty-schedules", //(新增、更新、删除)值班表
+  },
+  //物资库存
+  materialStore: {
+    store: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/goods/store", //CRUD操作
+  },
+  //物资申请
+  application: {
+    application: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/goods/application", //CRUD操作
+  },
+};

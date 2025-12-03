@@ -1,0 +1,1 @@
+ALTER TABLE `application` ADD `operation` text NOT NULL;
