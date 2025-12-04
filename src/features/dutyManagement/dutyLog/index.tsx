@@ -23,7 +23,7 @@ import {
 import {
   useDutyLogs,
   useDeleteDutyLog,
-  useCreateDutyLog,
+  useCreateDutyLogWithWebhook,
   type DutyLogData,
 } from "./query";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,8 @@ export default function DutyLogView() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [viewLog, setViewLog] = useState<DutyLogData | null>(null);
+  const [confirmCreateOpen, setConfirmCreateOpen] = useState(false);
+  const [pendingCreate, setPendingCreate] = useState<DutyLogData | null>(null);
 
   // 查询数据
   const { data, isLoading, error } = useDutyLogs({
@@ -49,7 +51,7 @@ export default function DutyLogView() {
   // 删除mutation
   const deleteMutation = useDeleteDutyLog();
   // 创建mutation
-  const createMutation = useCreateDutyLog();
+  const createMutation = useCreateDutyLogWithWebhook();
 
   const handleSearch = (params: SearchFormData) => {
     setSearchParams(params);
@@ -81,14 +83,33 @@ export default function DutyLogView() {
     }
   };
 
-  const handleCreate = async (data: DutyLogData) => {
+  const handleCreateRequest = (data: DutyLogData) => {
+    setPendingCreate(data);
+    setConfirmCreateOpen(true);
+  };
+
+  const handleConfirmCreate = async () => {
+    if (!pendingCreate) return;
     try {
-      await createMutation.mutateAsync(data);
+      const result = await createMutation.mutateAsync(pendingCreate);
+      if (result.pushed) {
+        toast.success("创建并推送成功");
+      } else if (result.pushError) {
+        console.error(result.pushError);
+        toast.error("日志已保存，但推送失败");
+      } else {
+        toast.success("创建成功");
+      }
+
       setIsCreateOpen(false);
-      toast.success("创建成功");
+      setConfirmCreateOpen(false);
+      setPendingCreate(null);
     } catch (error) {
       console.error(error);
-      toast.error("创建失败");
+      toast.error(
+        error instanceof Error ? error.message : "创建失败",
+      );
+      setConfirmCreateOpen(false);
     }
   };
 
@@ -136,13 +157,41 @@ export default function DutyLogView() {
           </DialogHeader>
           <div className="mt-4">
             <LogForm
-              onSubmit={handleCreate}
+              onSubmit={handleCreateRequest}
               isLoading={createMutation.isPending}
               onCancel={() => setIsCreateOpen(false)}
             />
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={confirmCreateOpen}
+        onOpenChange={(open) => {
+          setConfirmCreateOpen(open);
+          if (!open) setPendingCreate(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认保存并推送</AlertDialogTitle>
+            <AlertDialogDescription>
+              内容保存后将不可修改，且将同步推送到企业微信。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={createMutation.isPending}>
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmCreate}
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending ? "保存中..." : "确认"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* 删除确认弹窗 */}
       <AlertDialog

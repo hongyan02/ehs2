@@ -19,6 +19,11 @@ export const menuItems: MenuItem[] = [
     icon: Home,
   },
   {
+    title: "积分管理",
+    url: "/points",
+    icon: Trophy,
+  },
+  {
     title: "值班管理",
     icon: Calendar,
     items: [
@@ -32,7 +37,7 @@ export const menuItems: MenuItem[] = [
       },
       {
         title: "换班申请",
-        url: "/dutyManagement/dutyChange"
+        url: "/dutyManagement/dutyChange",
       },
       {
         title: "值班表",
@@ -57,11 +62,6 @@ export const menuItems: MenuItem[] = [
         url: "/goods/approval",
       },
     ],
-  },
-  {
-    title: "积分管理",
-    url: "/points",
-    icon: Trophy,
   },
 ];
 

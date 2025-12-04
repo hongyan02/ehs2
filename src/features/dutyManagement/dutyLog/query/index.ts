@@ -8,6 +8,7 @@ import {
   type GetDutyLogsParams,
   type DutyLogData,
 } from "./api";
+import { pushDutyLogWebhook } from "./api";
 
 /**
  * 后端响应类型
@@ -142,3 +143,40 @@ export const useDeleteDutyLog = () => {
 
 // 导出类型
 export type { GetDutyLogsParams, DutyLogData };
+
+/**
+ * 创建值班日志并推送微信机器人 Hook
+ */
+export const useCreateDutyLogWithWebhook = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: DutyLogData) => {
+      const res = await createDutyLog(data);
+      const dutyLog = res.data.data;
+
+      const dutyLogId =
+        dutyLog?.id ??
+        (typeof dutyLog?.no === "string"
+          ? Number.parseInt(dutyLog.no, 10)
+          : undefined);
+
+      if (!dutyLogId) {
+        throw new Error("创建成功，但未获取到日志ID，未推送到微信");
+      }
+
+      try {
+        await pushDutyLogWebhook({
+          key: "7a6d363c-dd0c-4732-abdb-07a7086bb875",
+          dutyLogId,
+        });
+        return { dutyLog, pushed: true };
+      } catch (error) {
+        return { dutyLog, pushed: false, pushError: error };
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dutyLogs"] });
+    },
+  });
+};

@@ -56,3 +56,9 @@ export function deleteDutyLog(id: number) {
     headers: { isToken: false },
   });
 }
+
+export function pushDutyLogWebhook(payload: { key: string; dutyLogId: number }) {
+  return request.post(API_SERVICE.webhook.dutyLog, payload, {
+    headers: { isToken: false },
+  });
+}

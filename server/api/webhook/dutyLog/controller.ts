@@ -10,22 +10,29 @@ const parsePayload = (body: unknown): DutyLogWebhookPayload => {
     throw new Error("Request body must be a JSON object");
   }
 
-  const { key, content } = body as {
+  const { key, dutyLogId } = body as {
     key?: unknown;
-    content?: unknown;
+    dutyLogId?: unknown;
   };
 
   if (typeof key !== "string") {
     throw new Error("`key` must be a string");
   }
 
-  if (typeof content !== "string") {
-    throw new Error("`content` must be a string");
+  const parsedDutyLogId =
+    typeof dutyLogId === "number"
+      ? dutyLogId
+      : typeof dutyLogId === "string"
+        ? Number.parseInt(dutyLogId, 10)
+        : NaN;
+
+  if (!Number.isInteger(parsedDutyLogId) || parsedDutyLogId <= 0) {
+    throw new Error("`dutyLogId` must be a positive integer");
   }
 
   return {
     key,
-    content,
+    dutyLogId: parsedDutyLogId,
   };
 };
 
