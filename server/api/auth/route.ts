@@ -105,4 +105,21 @@ app.post(
     }
 );
 
+// 登出接口 - 清除 HttpOnly cookie
+app.post("/logout", (c) => {
+    // 设置过期的 cookie 来清除它
+    setCookie(c, "Permission-Token", "", {
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        maxAge: 0, // 立即过期
+        sameSite: "Lax",
+    });
+
+    return c.json({
+        success: true,
+        msg: "Logout success"
+    });
+});
+
 export default app;

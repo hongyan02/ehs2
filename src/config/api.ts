@@ -2,7 +2,7 @@ export const API_SERVICE = {
     //登陆
     login: {
         login: "/api/auth/login", //登陆
-        logout: process.env.NEXT_PUBLIC_API_CONFIG_IMS + "/logout", //登出
+        logout: "/api/auth/logout", //登出（清除 HttpOnly cookie）
     },
     //用户信息相关
     userInfo: {

@@ -63,6 +63,7 @@ export const menuItems: MenuItem[] = [
       {
         title: "申请审批",
         url: "/goods/approval",
+        require: "GOODS_APPROVAL"
       },
     ],
   },

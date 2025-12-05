@@ -8,6 +8,7 @@ const PERMISSION_MAP: Record<string, string> = {
   // "/admin": "ADMIN_ACCESS",
   // "/goods/application": "GOODS_APPLICATION_VIEW",
   "/dutyManagement/dutyPerson": "DUTY",
+  "/goods/approval": "GOODS_APPROVAL"
 };
 
 // Public paths that don't require authentication

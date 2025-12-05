@@ -25,6 +25,7 @@ type ScheduleFormValues = {
   };
   night: {
     dutyLeader: Option[];
+    shiftCadre: Option[];
     safetyManager: Option[];
     safetyOfficer: Option[];
   };
@@ -67,6 +68,7 @@ export function ScheduleDialog({
       },
       night: {
         dutyLeader: [],
+        shiftCadre: [],
         safetyManager: [],
         safetyOfficer: [],
       },
@@ -88,6 +90,7 @@ export function ScheduleDialog({
           },
           night: {
             dutyLeader: [],
+            shiftCadre: [],
             safetyManager: [],
             safetyOfficer: [],
           },
@@ -223,6 +226,13 @@ export function ScheduleDialog({
                 control={control}
                 name="night.dutyLeader"
                 label="值班领导"
+                options={employeeOptions}
+                onDelete={deleteMutation}
+              />
+              <RoleSection
+                control={control}
+                name="night.shiftCadre"
+                label="带班干部"
                 options={employeeOptions}
                 onDelete={deleteMutation}
               />

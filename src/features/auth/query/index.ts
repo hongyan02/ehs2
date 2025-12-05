@@ -49,10 +49,12 @@ export function useLogout() {
     onSuccess: () => {
       console.log("logout success");
       Cookies.remove("token");
+      // Permission-Token 是 HttpOnly cookie，由服务端 /api/auth/logout 清除
       setInfo({
         username: "",
         nickname: "",
         deptName: "",
+        permissions: []
       });
       router.push("/login");
     },
@@ -65,6 +67,7 @@ export function useLogout() {
         username: "",
         nickname: "",
         deptName: "",
+        permissions: []
       });
       router.push("/login");
     },
