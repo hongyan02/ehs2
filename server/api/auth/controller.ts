@@ -18,9 +18,13 @@ export const loginController = async (c: Context) => {
         const imsResponse = await callIMSLogin(username, password);
 
         // IMS 返回的数据结构：{ token, user: { nickName, ... } }
-        const token = imsResponse.token;
+        const token = imsResponse.token || null;
         const user = imsResponse.user || {};
         const employeeId = username; // 使用 username 作为 employeeId
+
+        if (!token) {
+            console.log("⚠️ IMS did not return a token for user:", username);
+        }
 
         // 2. Get user permissions from database
         const permissions = await getUserPermissions(employeeId);
@@ -35,7 +39,6 @@ export const loginController = async (c: Context) => {
         };
         const permissionToken = await sign(payload, jwtSecret);
 
-        // 4. Set Cookie (secure: false for HTTP deployment)
         setCookie(c, "Permission-Token", permissionToken, {
             path: "/",
             secure: false, // 设置为 false 以支持 HTTP
@@ -49,7 +52,7 @@ export const loginController = async (c: Context) => {
             success: true,
             code: 200,
             msg: "Login success",
-            token: token,
+            token: token, // 可能为 null
             user: {
                 name: user.nickName || username,
                 employeeId: employeeId,
@@ -72,7 +75,7 @@ export const loginController = async (c: Context) => {
 };
 
 export const logoutController = (c: Context) => {
-    // 设置过期的 cookie 来清除它
+
     setCookie(c, "Permission-Token", "", {
         path: "/",
         secure: false, // 设置为 false 以支持 HTTP
