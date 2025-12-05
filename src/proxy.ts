@@ -23,9 +23,9 @@ export async function proxy(request: NextRequest) {
   }
 
   // 2. Get token
-  const token = request.cookies.get("Permission-Token")?.value;
-
-  if (!token) {
+  const Ptoken = request.cookies.get("Permission-Token")?.value;
+  const token = request.cookies.get("token")?.value;
+  if (!token || !Ptoken) {
     // Redirect to login if no token
     return NextResponse.redirect(new URL("/login", request.url));
   }
@@ -33,7 +33,7 @@ export async function proxy(request: NextRequest) {
   try {
     // 3. Verify token
     const jwtSecret = process.env.JWT_SECRET || "default_secret_please_change";
-    const payload = await verify(token, jwtSecret);
+    const payload = await verify(Ptoken, jwtSecret);
 
     // 4. Check permissions
     // Find the most specific permission requirement for the current path
