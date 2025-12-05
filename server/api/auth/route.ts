@@ -78,9 +78,13 @@ app.post(
             const permissionToken = await sign(payload, jwtSecret);
 
             // 5. Set Cookie
+            // 注意：在生产环境如果使用 HTTP，需要设置 secure: false
+            const isProduction = process.env.NODE_ENV === "production";
+            const isHttps = process.env.ENABLE_HTTPS === "true"; // 可通过环境变量控制
+
             setCookie(c, "Permission-Token", permissionToken, {
                 path: "/",
-                secure: process.env.NODE_ENV === "production",
+                secure: isProduction && isHttps, // 只在 HTTPS 下启用 secure
                 httpOnly: true,
                 maxAge: 60 * 60 * 24,
                 sameSite: "Lax",
@@ -107,10 +111,13 @@ app.post(
 
 // 登出接口 - 清除 HttpOnly cookie
 app.post("/logout", (c) => {
+    const isProduction = process.env.NODE_ENV === "production";
+    const isHttps = process.env.ENABLE_HTTPS === "true";
+
     // 设置过期的 cookie 来清除它
     setCookie(c, "Permission-Token", "", {
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        secure: isProduction && isHttps,
         httpOnly: true,
         maxAge: 0, // 立即过期
         sameSite: "Lax",
