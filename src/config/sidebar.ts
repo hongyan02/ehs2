@@ -1,4 +1,11 @@
-import { Home, Calendar, Trophy, Warehouse, User2 } from "lucide-react";
+import {
+  Home,
+  Calendar,
+  Trophy,
+  Warehouse,
+  User2,
+  Settings,
+} from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
 export interface MenuItem {
@@ -19,6 +26,17 @@ export const menuItems: MenuItem[] = [
     title: "首页",
     url: "/",
     icon: Home,
+  },
+  {
+    title: "系统管理",
+    icon: Settings,
+    require: "ADMIN",
+    items: [
+      {
+        title: "权限管理",
+        url: "/system/permissions",
+      },
+    ],
   },
   {
     title: "积分管理",
@@ -63,7 +81,7 @@ export const menuItems: MenuItem[] = [
       {
         title: "申请审批",
         url: "/goods/approval",
-        require: "GOODS_APPROVAL"
+        require: "GOODS_APPROVAL",
       },
     ],
   },

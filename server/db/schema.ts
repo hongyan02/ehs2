@@ -260,11 +260,22 @@ export const materialLog = sqliteTable("material_log", {
   time: text("time").notNull(),
 });
 
+// 权限定义表
+export const permissionDefinition = sqliteTable("permission_definition", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  code: text("code").notNull().unique(), // 权限代码，如 "ADMIN"
+  name: text("name").notNull(), // 权限名称，如 "系统管理员"
+  description: text("description"), // 权限描述
+  routes: text("routes").notNull(), // JSON string of string[], 可访问的路由列表
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
 // 用户权限表
 export const userPermission = sqliteTable("user_permission", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   employeeId: text("employee_id").unique().notNull(),
   permissions: text("permissions").notNull(), // JSON string of string[]
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  createdAt: text("created_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
+  updatedAt: text("updated_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
 });

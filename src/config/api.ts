@@ -43,4 +43,9 @@ export const API_SERVICE = {
     dutyChange: {
         change: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/dutySchedule/change", //换班申请 CRUD
     },
+    //权限管理
+    permissions: {
+        definitions: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/system/permissions/definitions", //权限定义 CRUD
+        users: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/system/permissions/users", //用户权限 CRUD
+    },
 };
