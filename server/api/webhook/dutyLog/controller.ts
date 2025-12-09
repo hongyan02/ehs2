@@ -10,14 +10,9 @@ const parsePayload = (body: unknown): DutyLogWebhookPayload => {
     throw new Error("Request body must be a JSON object");
   }
 
-  const { key, dutyLogId } = body as {
-    key?: unknown;
+  const { dutyLogId } = body as {
     dutyLogId?: unknown;
   };
-
-  if (typeof key !== "string") {
-    throw new Error("`key` must be a string");
-  }
 
   const parsedDutyLogId =
     typeof dutyLogId === "number"
@@ -31,7 +26,6 @@ const parsePayload = (body: unknown): DutyLogWebhookPayload => {
   }
 
   return {
-    key,
     dutyLogId: parsedDutyLogId,
   };
 };

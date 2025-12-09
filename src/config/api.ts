@@ -12,6 +12,7 @@ export const API_SERVICE = {
     //webhook
     webhook: {
         dutyLog: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/webhook/dutyLog", //值班日志推送
+        config: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/webhook/config", //Webhook配置
     },
     //值班日志
     dutyLog: {

@@ -391,3 +391,23 @@ export const pointLog = sqliteTable("point_log", {
   //工号月份索引
   idxNoMonth: index("idx_point_log_no_month").on(table.no, table.month),
 }));
+
+export const webhookConfig = sqliteTable("webhook_config", {
+  //自增主键ID
+  id: integer("id").primaryKey({ autoIncrement: true }),
+
+  //webhook key
+  webhookKey: text("webhook_key").notNull(),
+
+  //场景
+  scene: text("scene").notNull(),
+
+  //描述
+  description: text("description"),
+
+  //创建时间
+  createdAt: text("created_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
+
+  //更新时间
+  updatedAt: text("updated_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
+});

@@ -2,13 +2,14 @@ import { htmlToText } from "html-to-text";
 import { eq } from "drizzle-orm";
 
 import { db } from "@server/db/db";
-import { dutyLog, dutyStaff } from "@server/db/schema";
+import { dutyLog, webhookConfig } from "@server/db/schema";
+
+const SCENE_DUTY_LOG = "值班日志推送";
 
 const DEFAULT_WEBHOOK_BASE_URL =
   "https://qyapi.weixin.qq.com/cgi-bin/webhook/send";
 
 export type DutyLogWebhookPayload = {
-  key: string;
   dutyLogId: number;
 };
 
@@ -36,25 +37,23 @@ const getDutyLogRecord = async (dutyLogId: number) => {
   return result[0];
 };
 
-const getMentionedMobiles = async (no: string) => {
+const getWebhookKey = async (scene: string) => {
+  const result = await db
+    .select({ webhookKey: webhookConfig.webhookKey })
+    .from(webhookConfig)
+    .where(eq(webhookConfig.scene, scene));
+
+  return result[0]?.webhookKey;
+};
+
+const getMentionedList = (no: string) => {
   const trimmedNo = no.trim();
 
   if (!trimmedNo) {
     return ["@all"];
   }
 
-  const rows = await db
-    .select({ phone: dutyStaff.phone })
-    .from(dutyStaff)
-    .where(eq(dutyStaff.no, trimmedNo));
-
-  const phones = rows
-    .map(({ phone }) => phone?.trim())
-    .filter((phone): phone is string => Boolean(phone));
-
-  const uniquePhones = Array.from(new Set(phones));
-
-  return [...uniquePhones, "@all"];
+  return [trimmedNo, "@all"];
 };
 
 const formatShift = (shift: number) => {
@@ -85,9 +84,14 @@ const buildContent = (record: typeof dutyLog.$inferSelect) => {
 };
 
 export const sendDutyLogWebhook = async ({
-  key,
   dutyLogId,
 }: DutyLogWebhookPayload): Promise<WeComWebhookResponse> => {
+  const key = await getWebhookKey(SCENE_DUTY_LOG);
+
+  if (!key) {
+    throw new Error(`Webhook key not found for scene: ${SCENE_DUTY_LOG}`);
+  }
+
   const trimmedKey = key.trim();
 
   if (!trimmedKey) {
@@ -110,7 +114,7 @@ export const sendDutyLogWebhook = async ({
     throw new Error("Duty log content is empty");
   }
 
-  const mentionedMobileList = await getMentionedMobiles(record.no);
+  const mentionedList = getMentionedList(record.no);
 
   const response = await fetch(buildWebhookUrl(trimmedKey), {
     method: "POST",
@@ -121,7 +125,7 @@ export const sendDutyLogWebhook = async ({
       msgtype: "text",
       text: {
         content: textContent,
-        mentioned_mobile_list: mentionedMobileList,
+        mentioned_list: mentionedList,
       },
     }),
   });

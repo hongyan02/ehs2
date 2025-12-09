@@ -167,7 +167,6 @@ export const useCreateDutyLogWithWebhook = () => {
 
       try {
         await pushDutyLogWebhook({
-          key: "7a6d363c-dd0c-4732-abdb-07a7086bb875",
           dutyLogId,
         });
         return { dutyLog, pushed: true };

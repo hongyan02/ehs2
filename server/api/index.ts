@@ -10,6 +10,7 @@ import materialLogRoute from "./goods/materialLog/route";
 import authRoute from "./auth/route";
 import permissionsRoute from "./system/permissions/route";
 import pointRoute from "./point/route";
+import webhookRoute from "./webhook/route"
 import { customLogger } from "../middleware/logger";
 
 const app = new Hono().basePath("/api");
@@ -29,6 +30,7 @@ app.route("/goods/applicationDetail", applicationDetailRoute);
 app.route("/goods/materialLog", materialLogRoute);
 app.route("/system/permissions", permissionsRoute);
 app.route("/point", pointRoute);
+app.route("/webhook", webhookRoute);
 
 export { app };
 

@@ -36,6 +36,10 @@ export const menuItems: MenuItem[] = [
         title: "权限管理",
         url: "/system/permissions",
       },
+      {
+        title: "推送管理",
+        url: "/system/webhook",
+      },
     ],
   },
   {
