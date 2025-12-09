@@ -42,6 +42,7 @@ export const menuItems: MenuItem[] = [
     title: "积分管理",
     url: "/points",
     icon: Trophy,
+    require: "POINT",
   },
   {
     title: "值班管理",

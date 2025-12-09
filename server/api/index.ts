@@ -9,8 +9,8 @@ import applicationDetailRoute from "./goods/applicationDetail/route";
 import materialLogRoute from "./goods/materialLog/route";
 import authRoute from "./auth/route";
 import permissionsRoute from "./system/permissions/route";
+import pointRoute from "./point/route";
 import { customLogger } from "../middleware/logger";
-import { requirePermission } from "@server/middleware/auth";
 
 const app = new Hono().basePath("/api");
 
@@ -28,6 +28,7 @@ app.route("/goods/application", applicationRoute);
 app.route("/goods/applicationDetail", applicationDetailRoute);
 app.route("/goods/materialLog", materialLogRoute);
 app.route("/system/permissions", permissionsRoute);
+app.route("/point", pointRoute);
 
 export { app };
 

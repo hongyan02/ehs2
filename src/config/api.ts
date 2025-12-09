@@ -48,4 +48,12 @@ export const API_SERVICE = {
         definitions: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/system/permissions/definitions", //权限定义 CRUD
         users: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/system/permissions/users", //用户权限 CRUD
     },
+    //积分管理
+    points: {
+        person: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/point/person",
+        categories: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/point/categories",
+        events: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/point/events",
+        logs: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/point/logs",
+        ranking: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/point/ranking",
+    },
 };

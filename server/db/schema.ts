@@ -1,4 +1,4 @@
-import { sqliteTable, integer, text } from "drizzle-orm/sqlite-core";
+import { sqliteTable, integer, text, index } from "drizzle-orm/sqlite-core";
 
 //值班人员库
 export const dutyStaff = sqliteTable("dutyStaff", {
@@ -279,3 +279,115 @@ export const userPermission = sqliteTable("user_permission", {
   createdAt: text("created_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
   updatedAt: text("updated_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
 });
+
+//积分人员表
+export const pointPerson = sqliteTable("point_person", {
+  //自增主键ID
+  id: integer("id").primaryKey({ autoIncrement: true }),
+
+  //工号
+  no: text("no").unique().notNull(),
+
+  //姓名
+  name: text("name").notNull(),
+
+  //部门
+  dept: text("dept"),
+
+  //0=禁用，1=启用
+  active: integer("active").notNull().default(1),
+
+  //创建时间
+  createdAt: text("created_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
+
+  //更新时间
+  updatedAt: text("updated_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
+});
+
+//积分分类表
+export const pointCategories = sqliteTable("point_categories", {
+  //自增主键ID
+  id: integer("id").primaryKey({ autoIncrement: true }),
+
+  //积分分类名称
+  categoryName: text("category_name").notNull(),
+
+  //积分分类描述
+  description: text("description"),
+
+  //创建时间
+  createdAt: text("created_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
+
+  //更新时间
+  updatedAt: text("updated_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
+});
+
+//积分事件表
+export const pointEvent = sqliteTable("point_event", {
+  //自增主键ID
+  id: integer("id").primaryKey({ autoIncrement: true }),
+
+  //积分事件名称
+  name: text("name").notNull(),
+
+  //积分事件描述
+  description: text("description"),
+
+  //积分事件类型
+  categoryId: integer("category_id").notNull(),
+
+  //积分事件默认积分
+  defaultPoint: integer("default_point").notNull(),
+
+  //创建时间
+  createdAt: text("created_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
+
+  //更新时间
+  updatedAt: text("updated_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
+});
+
+//积分记录表
+export const pointLog = sqliteTable("point_log", {
+  //自增主键ID
+  id: integer("id").primaryKey({ autoIncrement: true }),
+
+  //积分事件名称
+  pointName: text("point_name").notNull(),
+
+  //积分事件描述
+  description: text("description"),
+
+  //积分ID
+  eventId: integer("event_id").notNull(),
+
+  //积分事件默认积分
+  defaultPoint: integer("default_point").notNull(),
+
+  //实际积分
+  point: integer("point").notNull(),
+
+  //工号
+  no: text("no").notNull(),
+
+  //姓名
+  name: text("name").notNull(),
+
+  //部门
+  dept: text("dept").notNull(),
+
+  //月份
+  month: text("month").notNull(),
+
+  //创建时间
+  createdAt: text("created_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
+
+  //更新时间
+  updatedAt: text("updated_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
+}, (table) => ({
+  //月份索引
+  idxMonth: index("idx_point_log_month").on(table.month),
+  //月份部门索引
+  idxMonthDept: index("idx_point_log_month_dept").on(table.month, table.dept),
+  //工号月份索引
+  idxNoMonth: index("idx_point_log_no_month").on(table.no, table.month),
+}));
