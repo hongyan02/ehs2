@@ -119,15 +119,19 @@ export function ScheduleDialog({
 
           // 使用数据库记录的 ID 作为 value 和 id
           if (found) {
-            const result = {
+            const result: ScheduleOption = {
               ...found,
               scheduleId: String(item.id), // 排班记录ID
+              role: item.position,
             };
             return result;
           }
 
-          const result = {
-            value: found?.value ?? item.no ?? item.name ?? String(item.id),
+          const fallbackValue =
+            item.no || item.name || (allPersons?.[0]?.id ? String(allPersons[0].id) : String(item.id));
+
+          const result: ScheduleOption = {
+            value: fallbackValue,
             label: item.name,
             position: item.position,
             no: item.no || "",
@@ -170,7 +174,7 @@ export function ScheduleDialog({
         });
       }
     }
-  }, [open, date, reset, initialData, employeeOptions]);
+  }, [open, date, reset, initialData, employeeOptions, allPersons]);
 
   const onSubmit = (data: ScheduleFormValues) => {
     onSave(data);

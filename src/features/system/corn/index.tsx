@@ -30,9 +30,7 @@ type FormValues = {
     content: string;
 };
 
-const JOB_KEY_OPTIONS = [
-    { value: "send-duty-leader-text", label: "值班日志填写提醒" },
-];
+const JOB_KEY_OPTIONS = [{ value: "send-duty-leader-text", label: "值班日志填写提醒" }];
 
 const formatDate = (val?: string | null) => {
     if (!val) return "-";
@@ -175,7 +173,8 @@ export default function CornView() {
         {
             accessorKey: "cron",
             header: "Cron 表达式",
-            cell: ({ row }) => row.original.cron || <span className="text-muted-foreground">手动</span>,
+            cell: ({ row }) =>
+                row.original.cron || <span className="text-muted-foreground">手动</span>,
         },
         {
             accessorKey: "enabled",
@@ -217,7 +216,11 @@ export default function CornView() {
                 if (!status) return "-";
                 const isOk = status === "success";
                 return (
-                    <Badge className={isOk ? "bg-green-500 hover:bg-green-500" : "bg-red-500 hover:bg-red-500"}>
+                    <Badge
+                        className={
+                            isOk ? "bg-green-500 hover:bg-green-500" : "bg-red-500 hover:bg-red-500"
+                        }
+                    >
                         {isOk ? "成功" : "失败"}
                     </Badge>
                 );
@@ -228,7 +231,9 @@ export default function CornView() {
             header: "错误信息",
             cell: ({ row }) =>
                 row.original.lastError ? (
-                    <span className="line-clamp-2 max-w-xs break-all">{row.original.lastError}</span>
+                    <span className="line-clamp-2 max-w-xs break-all">
+                        {row.original.lastError}
+                    </span>
                 ) : (
                     "-"
                 ),
@@ -276,10 +281,6 @@ export default function CornView() {
     return (
         <div className="space-y-4 p-6">
             <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-xl font-semibold">定时任务</h2>
-                    <p className="text-sm text-muted-foreground">支持 cron 表达式与手动触发</p>
-                </div>
                 <Button
                     onClick={() => {
                         setEditing(null);
@@ -299,10 +300,7 @@ export default function CornView() {
                         <DialogTitle>{editing ? "编辑任务" : "新建任务"}</DialogTitle>
                     </DialogHeader>
 
-                    <form
-                        className="space-y-4"
-                        onSubmit={form.handleSubmit(handleSubmit)}
-                    >
+                    <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
                         <div className="space-y-2">
                             <Label htmlFor="name">任务名称</Label>
                             <Input
@@ -378,7 +376,10 @@ export default function CornView() {
                             >
                                 取消
                             </Button>
-                            <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                            <Button
+                                type="submit"
+                                disabled={createMutation.isPending || updateMutation.isPending}
+                            >
                                 {editing ? "保存" : "创建"}
                             </Button>
                         </div>
