@@ -59,7 +59,6 @@ export default function PersonForm({
     handleSubmit,
     control,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -73,14 +72,14 @@ export default function PersonForm({
     },
   });
 
-  const selectedPosition = watch("position");
-  const isSafetyOfficer = selectedPosition === "安全员";
-
   // 处理姓名选择变化
-  const handleNameChange = (nickName: string) => {
-    const selectedUser = userList.find((user) => user.nickName === nickName);
-    if (selectedUser) {
-      setValue("name", selectedUser.nickName);
+  const handleNameChange = (option?: AutoCompleteOption) => {
+    if (!option) return;
+
+    const selectedUser = userList.find((user) => user.nickName === option.label);
+
+    setValue("name", option.label);
+    if (selectedUser?.userName) {
       setValue("no", selectedUser.userName);
     }
   };
@@ -155,32 +154,33 @@ export default function PersonForm({
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           姓名 <span className="text-red-500">*</span>
         </label>
-        {isSafetyOfficer ? (
-          <Input placeholder="请输入姓名" {...register("name")} />
-        ) : (
-          <Controller
-            control={control}
-            name="name"
-            render={({ field }) => {
-              const selectedOption =
-                userOptions.find((option) => option.value === field.value) ??
-                undefined;
+        <Controller
+          control={control}
+          name="name"
+          render={({ field }) => {
+            const selectedOption =
+              userOptions.find((option) => option.value === field.value) ??
+              (field.value
+                ? {
+                    label: field.value,
+                    value: field.value,
+                  }
+                : undefined);
 
-              return (
-                <AutoComplete
-                  options={userOptions}
-                  placeholder="选择姓名"
-                  emptyMessage="没有匹配的姓名"
-                  value={selectedOption}
-                  onValueChange={(option) => {
-                    field.onChange(option.value);
-                    handleNameChange(option.value);
-                  }}
-                />
-              );
-            }}
-          />
-        )}
+            return (
+              <AutoComplete
+                options={userOptions}
+                placeholder="选择姓名"
+                emptyMessage="没有匹配的姓名"
+                value={selectedOption}
+                onValueChange={(option) => {
+                  field.onChange(option.value);
+                  handleNameChange(option);
+                }}
+              />
+            );
+          }}
+        />
         {errors.name && (
           <p className="text-sm font-medium text-red-500">
             {errors.name.message}
@@ -192,11 +192,7 @@ export default function PersonForm({
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           工号 <span className="text-red-500">*</span>
         </label>
-        <Input
-          placeholder="工号"
-          {...register("no")}
-          disabled={!isSafetyOfficer}
-        />
+        <Input placeholder="工号" {...register("no")} />
         {errors.no && (
           <p className="text-sm font-medium text-red-500">
             {errors.no.message}

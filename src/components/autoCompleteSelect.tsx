@@ -46,8 +46,22 @@ export const AutoComplete = ({
   const allowOpenOnFocusRef = useRef(false);
 
   const [isOpen, setOpen] = useState(false);
-  const [selected, setSelected] = useState<Option>(value as Option);
+  const [selected, setSelected] = useState<Option | undefined>(value);
   const [inputValue, setInputValue] = useState<string>(value?.label || "");
+
+  const findOptionByLabel = useCallback(
+    (label: string) => options.find((option) => option.label === label),
+    [options],
+  );
+
+  const selectOption = useCallback(
+    (option: Option) => {
+      setSelected(option);
+      setInputValue(option.label);
+      onValueChange?.(option);
+    },
+    [onValueChange],
+  );
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
@@ -63,12 +77,10 @@ export const AutoComplete = ({
 
       // This is not a default behaviour of the <input /> field
       if (event.key === "Enter" && input.value !== "") {
-        const optionToSelect = options.find(
-          (option) => option.label === input.value,
-        );
+        const optionToSelect =
+          findOptionByLabel(input.value) || { label: input.value, value: input.value };
         if (optionToSelect) {
-          setSelected(optionToSelect);
-          onValueChange?.(optionToSelect);
+          selectOption(optionToSelect);
         }
       }
 
@@ -76,20 +88,32 @@ export const AutoComplete = ({
         input.blur();
       }
     },
-    [isOpen, options, onValueChange],
+    [isOpen, findOptionByLabel, selectOption],
   );
 
   const handleBlur = useCallback(() => {
     setOpen(false);
-    setInputValue(selected?.label);
-  }, [selected]);
+    const trimmed = inputValue.trim();
+    if (!trimmed) {
+      setInputValue(selected?.label || "");
+      return;
+    }
+
+    const existing = findOptionByLabel(trimmed);
+    const next = existing || selected;
+    if (next && next.label === trimmed) {
+      setSelected(next);
+      setInputValue(next.label);
+      return;
+    }
+
+    const customOption = { label: trimmed, value: trimmed };
+    selectOption(customOption);
+  }, [findOptionByLabel, inputValue, selectOption, selected]);
 
   const handleSelectOption = useCallback(
     (selectedOption: Option) => {
-      setInputValue(selectedOption.label);
-
-      setSelected(selectedOption);
-      onValueChange?.(selectedOption);
+      selectOption(selectedOption);
 
       // This is a hack to prevent the input from being focused after the user selects an option
       // We can call this hack: "The next tick"
@@ -97,7 +121,7 @@ export const AutoComplete = ({
         inputRef?.current?.blur();
       }, 0);
     },
-    [onValueChange],
+    [selectOption],
   );
 
   useEffect(() => {
@@ -109,6 +133,11 @@ export const AutoComplete = ({
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    setSelected(value);
+    setInputValue(value?.label || "");
+  }, [value]);
 
   return (
     <CommandPrimitive onKeyDown={handleKeyDown}>
