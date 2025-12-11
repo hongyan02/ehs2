@@ -59,8 +59,9 @@ export default function PersonForm({
     handleSubmit,
     control,
     setValue,
-  formState: { errors },
-} = useForm<FormValues>({
+    watch,
+    formState: { errors },
+  } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: defaultValues?.name || "",
@@ -71,6 +72,9 @@ export default function PersonForm({
       phone: defaultValues?.phone || "",
     },
   });
+
+  const selectedPosition = watch("position");
+  const isSafetyOfficer = selectedPosition === "安全员";
 
   // 处理姓名选择变化
   const handleNameChange = (nickName: string) => {
@@ -93,32 +97,90 @@ export default function PersonForm({
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            职位
+          </label>
+          <Controller
+            control={control}
+            name="position"
+            render={({ field }) => (
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value ?? ""}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="选择职位" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="值班领导">值班领导</SelectItem>
+                  <SelectItem value="带班干部">带班干部</SelectItem>
+                  <SelectItem value="安全管理人员">安全管理人员</SelectItem>
+                  <SelectItem value="安全员">安全员</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            班次 <span className="text-red-500">*</span>
+          </label>
+          <Controller
+            control={control}
+            name="shift"
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <SelectTrigger>
+                  <SelectValue placeholder="选择班次" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">白班</SelectItem>
+                  <SelectItem value="1">夜班</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.shift && (
+            <p className="text-sm font-medium text-red-500">
+              {errors.shift.message}
+            </p>
+          )}
+        </div>
+      </div>
+
       <div className="space-y-2">
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           姓名 <span className="text-red-500">*</span>
         </label>
-        <Controller
-          control={control}
-          name="name"
-          render={({ field }) => {
-            const selectedOption =
-              userOptions.find((option) => option.value === field.value) ??
-              undefined;
+        {isSafetyOfficer ? (
+          <Input placeholder="请输入姓名" {...register("name")} />
+        ) : (
+          <Controller
+            control={control}
+            name="name"
+            render={({ field }) => {
+              const selectedOption =
+                userOptions.find((option) => option.value === field.value) ??
+                undefined;
 
-            return (
-              <AutoComplete
-                options={userOptions}
-                placeholder="选择姓名"
-                emptyMessage="没有匹配的姓名"
-                value={selectedOption}
-                onValueChange={(option) => {
-                  field.onChange(option.value);
-                  handleNameChange(option.value);
-                }}
-              />
-            );
-          }}
-        />
+              return (
+                <AutoComplete
+                  options={userOptions}
+                  placeholder="选择姓名"
+                  emptyMessage="没有匹配的姓名"
+                  value={selectedOption}
+                  onValueChange={(option) => {
+                    field.onChange(option.value);
+                    handleNameChange(option.value);
+                  }}
+                />
+              );
+            }}
+          />
+        )}
         {errors.name && (
           <p className="text-sm font-medium text-red-500">
             {errors.name.message}
@@ -130,59 +192,14 @@ export default function PersonForm({
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           工号 <span className="text-red-500">*</span>
         </label>
-        <Input placeholder="工号" {...register("no")} disabled />
+        <Input
+          placeholder="工号"
+          {...register("no")}
+          disabled={!isSafetyOfficer}
+        />
         {errors.no && (
           <p className="text-sm font-medium text-red-500">
             {errors.no.message}
-          </p>
-        )}
-      </div>
-
-  <div className="space-y-2">
-    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-      职位
-    </label>
-    <Controller
-      control={control}
-      name="position"
-      render={({ field }) => (
-        <Select onValueChange={field.onChange} defaultValue={field.value ?? ""}>
-          <SelectTrigger>
-            <SelectValue placeholder="选择职位" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="值班领导">值班领导</SelectItem>
-            <SelectItem value="带班干部">带班干部</SelectItem>
-            <SelectItem value="安全管理人员">安全管理人员</SelectItem>
-            <SelectItem value="安全员">安全员</SelectItem>
-          </SelectContent>
-        </Select>
-      )}
-    />
-  </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          班次 <span className="text-red-500">*</span>
-        </label>
-        <Controller
-          control={control}
-          name="shift"
-          render={({ field }) => (
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <SelectTrigger>
-                <SelectValue placeholder="选择班次" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">白班</SelectItem>
-                <SelectItem value="1">夜班</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-        />
-        {errors.shift && (
-          <p className="text-sm font-medium text-red-500">
-            {errors.shift.message}
           </p>
         )}
       </div>
