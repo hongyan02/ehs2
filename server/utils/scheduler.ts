@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@server/db/db";
 import { schedulerTask } from "@server/db/schema";
 import { sendDutyLeaderTextMessage } from "@server/api/wxWork/dutyLog/services";
+import { sendDutyScheduleWebhook } from "@server/api/webhook/dutySchedule/services";
 
 type SchedulerTaskRow = typeof schedulerTask.$inferSelect;
 
@@ -17,7 +18,7 @@ const timeNow = () =>
         .toLocaleString("sv-SE", { timeZone: "Asia/Shanghai", hour12: false })
         .replace("T", " ");
 
-export const SUPPORTED_JOB_KEYS = ["send-duty-leader-text"] as const;
+export const SUPPORTED_JOB_KEYS = ["send-duty-leader-text", "send-duty-schedule-webhook"] as const;
 export type SupportedJobKey = (typeof SUPPORTED_JOB_KEYS)[number];
 
 const jobHandlers: Record<SupportedJobKey, JobHandler> = {
@@ -26,6 +27,12 @@ const jobHandlers: Record<SupportedJobKey, JobHandler> = {
         const shift = getShiftFromPayload(payload);
         const content = getContentFromPayload(payload);
         return sendDutyLeaderTextMessage({ shift, content });
+    },
+    "send-duty-schedule-webhook": async (task) => {
+        const payload = parsePayload(task.payload);
+        const shift = getShiftFromPayload(payload);
+        const content = getContentFromPayload(payload);
+        return sendDutyScheduleWebhook({ shift, content });
     },
 };
 

@@ -30,7 +30,10 @@ type FormValues = {
     content: string;
 };
 
-const JOB_KEY_OPTIONS = [{ value: "send-duty-leader-text", label: "值班日志填写提醒" }];
+const JOB_KEY_OPTIONS = [
+    { value: "send-duty-leader-text", label: "值班日志填写提醒" },
+    { value: "send-duty-schedule-webhook", label: "领导带班通知推送" },
+];
 
 const formatDate = (val?: string | null) => {
     if (!val) return "-";

@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import webhookDutyLogRoute from "./webhook/dutyLog/route";
+import webhookDutyScheduleRoute from "./webhook/dutySchedule/route";
 import dutyLogRoute from "./dutyLog/route";
 import dutyPersonRoute from "./dutyPerson/route";
 import dutyScheduleRoute from "./dutySchedule/route";
@@ -25,6 +26,7 @@ app.route("/auth", authRoute);
 
 app.route("/webhook", webhookRoute);
 app.route("/webhook", webhookDutyLogRoute);
+app.route("/webhook", webhookDutyScheduleRoute);
 app.route("/dutyLog", dutyLogRoute);
 app.route("/dutyPerson", dutyPersonRoute);
 app.route("/dutySchedule", dutyScheduleRoute);
