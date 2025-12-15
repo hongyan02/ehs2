@@ -1,13 +1,26 @@
 import React from "react";
 import { LoginForm } from "../components/LoginForm";
 import { cookies } from "next/headers";
-// import { decrypt } from "@/utils/jsencrypt";
+import { decrypt } from "@/utils/jsencrypt.server";
 
 export default async function LoginView() {
   const cookieStore = await cookies();
   const username = cookieStore.get("username")?.value;
-  // const password = cookieStore.get("password")?.value;
+  const password = cookieStore.get("password")?.value;
+  const passwordEncrypted = cookieStore.get("passwordEncrypted")?.value;
   const rememberMe = cookieStore.get("rememberMe")?.value === "true";
+  let initialPassword: string | undefined;
+  if (rememberMe && password) {
+    if (passwordEncrypted === "true") {
+      const decrypted = decrypt(password);
+      initialPassword = typeof decrypted === "string" ? decrypted : undefined;
+    } else if (passwordEncrypted === "false") {
+      initialPassword = password;
+    } else {
+      const decrypted = decrypt(password);
+      initialPassword = typeof decrypted === "string" ? decrypted : password;
+    }
+  }
 
   return (
     <div
@@ -27,7 +40,7 @@ export default async function LoginView() {
           <LoginForm
             initialUsername={username}
             initialRememberMe={rememberMe}
-            // initialPassword={decrypt(password)}
+            initialPassword={initialPassword}
           />
         </div>
       </div>

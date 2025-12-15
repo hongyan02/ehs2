@@ -1,16 +1,18 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Input, Button, Checkbox } from "antd";
-import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { encrypt } from "@/utils/jsencrypt";
 import Cookies from "js-cookie";
 import { useLogin } from "@/features/auth/query";
-import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircle, Loader2, Lock, User } from "lucide-react";
+import { encrypt } from "@/utils/jsencrypt.client";
 
 interface LoginFormProps {
   initialUsername?: string;
@@ -58,15 +60,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   // ✅ 只负责UI，不处理登录逻辑
   const onSubmit = (values: LoginFormValues) => {
     const { username, password, rememberMe } = values;
+    const cookieOptions = { expires: 7, path: "/" } as const;
     if (rememberMe) {
-      Cookies.set("rememberMe", "true");
-      Cookies.set("username", username);
-      // 建议加密后再存
-      // Cookies.set("password", encrypt(password));
+      Cookies.set("rememberMe", "true", cookieOptions);
+      Cookies.set("username", username, cookieOptions);
+      const encryptedPassword = encrypt(password);
+      const isEncrypted = typeof encryptedPassword === "string";
+      Cookies.set("passwordEncrypted", isEncrypted ? "true" : "false", cookieOptions);
+      Cookies.set("password", isEncrypted ? encryptedPassword : password, cookieOptions);
     } else {
-      Cookies.remove("rememberMe");
-      Cookies.remove("username");
-      // Cookies.remove("password");
+      const removeOptions = { path: "/" } as const;
+      Cookies.remove("rememberMe", removeOptions);
+      Cookies.remove("username", removeOptions);
+      Cookies.remove("passwordEncrypted", removeOptions);
+      Cookies.remove("password", removeOptions);
     }
     login({
       username,
@@ -98,12 +105,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           name="username"
           control={control}
           render={({ field }) => (
-            <Input
-              {...field}
-              prefix={<UserOutlined className="text-gray-400" />}
-              placeholder="账号"
-              className="h-12"
-            />
+            <div className="relative">
+              <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input {...field} placeholder="账号" className="h-12 pl-10" />
+            </div>
           )}
         />
         {errors.username && (
@@ -117,12 +122,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           name="password"
           control={control}
           render={({ field }) => (
-            <Input.Password
-              {...field}
-              prefix={<LockOutlined className="text-gray-400" />}
-              placeholder="密码"
-              className="h-12"
-            />
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                {...field}
+                type="password"
+                placeholder="密码"
+                className="h-12 pl-10"
+              />
+            </div>
           )}
         />
         {errors.password && (
@@ -136,23 +144,27 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           name="rememberMe"
           control={control}
           render={({ field }) => (
-            <Checkbox
-              checked={!!field.value}
-              onChange={(e) => field.onChange(e.target.checked)}
-            >
-              记住密码
-            </Checkbox>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="rememberMe"
+                checked={!!field.value}
+                onCheckedChange={(checked) => field.onChange(checked === true)}
+              />
+              <Label htmlFor="rememberMe">记住密码</Label>
+            </div>
           )}
         />
       </div>
 
       {/* 登录按钮 */}
       <Button
-        type="primary"
-        htmlType="submit"
-        className="w-full h-12 text-lg font-medium"
-        loading={isSubmitting || isPending}
+        type="submit"
+        className="w-full h-12 text-lg font-medium bg-sky-500 hover:bg-sky-500/70"
+        disabled={isSubmitting || isPending}
       >
+        {(isSubmitting || isPending) && (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        )}
         {isPending ? "登 录 中..." : "登 录"}
       </Button>
     </form>

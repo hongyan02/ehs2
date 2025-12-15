@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
     Dialog,
@@ -36,7 +36,7 @@ export default function PointLogDialog({
     onSubmit,
     isSubmitting,
 }: PointLogDialogProps) {
-    const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<PointLogFormValues>({
+    const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<PointLogFormValues>({
         defaultValues: {
             pointName: "",
             description: "",
@@ -66,15 +66,12 @@ export default function PointLogDialog({
         defaultPoint: String(e.defaultPoint),
     })) || [];
 
-    useEffect(() => {
-        if (!open) {
+    const handleClose = (nextOpen: boolean) => {
+        if (!nextOpen) {
             reset();
             setSelectedPerson(undefined);
             setSelectedEvent(undefined);
         }
-    }, [open, reset]);
-
-    const handleClose = (nextOpen: boolean) => {
         onOpenChange(nextOpen);
     };
 

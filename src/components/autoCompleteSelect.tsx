@@ -18,7 +18,7 @@ export type Option = Record<"value" | "label", string> & Record<string, string>;
 //https://www.armand-salle.fr/post/autocomplete-select-shadcn-ui/
 // options：候选项数据，格式为 { label, value, ... }，label 用于展示
 // emptyMessage：没有匹配结果时展示的提示文案
-// value：当前选中的 option（非受控时可不传）
+// value：当前选中的 option（建议受控使用）
 // onValueChange：选中变化时触发，返回完整 option
 // isLoading：是否处于加载态，显示骨架屏
 // disabled：禁用输入框和选择
@@ -46,8 +46,9 @@ export const AutoComplete = ({
   const allowOpenOnFocusRef = useRef(false);
 
   const [isOpen, setOpen] = useState(false);
-  const [selected, setSelected] = useState<Option | undefined>(value);
+  const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState<string>(value?.label || "");
+  const displayedInputValue = isEditing ? inputValue : (value?.label ?? "");
 
   const findOptionByLabel = useCallback(
     (label: string) => options.find((option) => option.label === label),
@@ -56,7 +57,8 @@ export const AutoComplete = ({
 
   const selectOption = useCallback(
     (option: Option) => {
-      setSelected(option);
+      setIsEditing(false);
+      setOpen(false);
       setInputValue(option.label);
       onValueChange?.(option);
     },
@@ -93,23 +95,26 @@ export const AutoComplete = ({
 
   const handleBlur = useCallback(() => {
     setOpen(false);
+    setIsEditing(false);
     const trimmed = inputValue.trim();
     if (!trimmed) {
-      setInputValue(selected?.label || "");
+      setInputValue(value?.label || "");
       return;
     }
 
     const existing = findOptionByLabel(trimmed);
-    const next = existing || selected;
-    if (next && next.label === trimmed) {
-      setSelected(next);
-      setInputValue(next.label);
+    if (existing) {
+      selectOption(existing);
+      return;
+    }
+    if (value && value.label === trimmed) {
+      setInputValue(value.label);
       return;
     }
 
     const customOption = { label: trimmed, value: trimmed };
     selectOption(customOption);
-  }, [findOptionByLabel, inputValue, selectOption, selected]);
+  }, [findOptionByLabel, inputValue, selectOption, value]);
 
   const handleSelectOption = useCallback(
     (selectedOption: Option) => {
@@ -134,11 +139,6 @@ export const AutoComplete = ({
     return () => window.clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    setSelected(value);
-    setInputValue(value?.label || "");
-  }, [value]);
-
   return (
     <CommandPrimitive onKeyDown={handleKeyDown}>
       <div className="relative">
@@ -147,14 +147,23 @@ export const AutoComplete = ({
         </span>
         <CommandPrimitive.Input
           ref={inputRef}
-          value={inputValue}
-          onValueChange={isLoading ? undefined : setInputValue}
+          value={displayedInputValue}
+          onValueChange={
+            isLoading
+              ? undefined
+              : (next) => {
+                  setIsEditing(true);
+                  setInputValue(next);
+                }
+          }
           onBlur={handleBlur}
           onFocus={(event) => {
             if (!allowOpenOnFocusRef.current) {
               event.target.blur();
               return;
             }
+            setIsEditing(true);
+            setInputValue(value?.label ?? "");
             setOpen(true);
           }}
           onPointerDown={() => {
@@ -186,7 +195,7 @@ export const AutoComplete = ({
             {options.length > 0 && !isLoading ? (
               <CommandGroup>
                 {options.map((option) => {
-                  const isSelected = selected?.value === option.value;
+                  const isSelected = value?.value === option.value;
                   return (
                     <CommandItem
                       key={option.value}
