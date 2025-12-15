@@ -148,7 +148,13 @@ export const getMissingDutyLogs = async (params: DutyLogInspectionParams) => {
     const schedules = await db
         .select()
         .from(dutySchedule)
-        .where(and(gte(dutySchedule.date, startDate), lte(dutySchedule.date, endDate)))
+        .where(
+            and(
+                gte(dutySchedule.date, startDate),
+                lte(dutySchedule.date, endDate),
+                eq(dutySchedule.position, "值班领导")
+            )
+        )
         .orderBy(asc(dutySchedule.date), asc(dutySchedule.shift));
 
     if (schedules.length === 0) return [];

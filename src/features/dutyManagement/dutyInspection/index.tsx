@@ -20,11 +20,30 @@ import { useDutyInspection, type DutyInspectionItem, type DutyInspectionParams }
 const formatShift = (shift: number) => (shift === 0 ? "白班" : "夜班");
 
 export default function DutyInspectionView() {
-    const [startDate, setStartDate] = useState<Date | undefined>();
-    const [endDate, setEndDate] = useState<Date | undefined>();
+    const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+    const [endDate, setEndDate] = useState<Date | undefined>(new Date());
     const [query, setQuery] = useState<DutyInspectionParams | null>(null);
 
+    // Initial search on mount
+    useMemo(() => {
+        if (!query && startDate && endDate) {
+            const formattedStart = format(startDate, "yyyy-MM-dd");
+            const formattedEnd = format(endDate, "yyyy-MM-dd");
+            setQuery({
+                startDate: formattedStart,
+                endDate: formattedEnd,
+            });
+        }
+    }, []); // Only run once on mount
+
     const inspectionMutation = useDutyInspection();
+
+    // Trigger mutation when query changes
+    useMemo(() => {
+        if (query && !inspectionMutation.data && !inspectionMutation.isPending) {
+            inspectionMutation.mutate(query);
+        }
+    }, [query]);
     const data = inspectionMutation.data ?? [];
 
     const handleSearch = async () => {

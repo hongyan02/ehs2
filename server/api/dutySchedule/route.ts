@@ -11,17 +11,14 @@ import { authMiddleware, requirePermission } from "../../middleware/auth";
 
 const dutyScheduleRoute = new Hono();
 
-// 全局应用认证中间件 - 所有路由都需要登录
-dutyScheduleRoute.use("*", authMiddleware);
-
-// 查询操作 - 只需要登录即可
+// 查询操作 - 不需要登录
 dutyScheduleRoute.get("/", getDutyScheduleController);
 dutyScheduleRoute.get("/:id", getDutyScheduleByIdController);
 
-// 修改操作 - 需要 DUTY 权限
-dutyScheduleRoute.post("/", requirePermission("DUTY"), createDutyScheduleController);
-dutyScheduleRoute.delete("/:id", requirePermission("DUTY"), deleteDutyScheduleController);
-dutyScheduleRoute.put("/:id", requirePermission("DUTY"), updateDutyScheduleController);
+// 修改操作 - 需要登录且需要 DUTY 权限
+dutyScheduleRoute.post("/", authMiddleware, requirePermission("DUTY"), createDutyScheduleController);
+dutyScheduleRoute.delete("/:id", authMiddleware, requirePermission("DUTY"), deleteDutyScheduleController);
+dutyScheduleRoute.put("/:id", authMiddleware, requirePermission("DUTY"), updateDutyScheduleController);
 // 换班申请相关路由
 dutyScheduleRoute.route("/change", changeRoute);
 

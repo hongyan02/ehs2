@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { authMiddleware } from "../../../middleware/auth";
 import {
     createDutySwapController,
     getMyDutySwapController,
@@ -10,6 +11,9 @@ import {
 } from "./controller";
 
 const changeRoute = new Hono();
+
+// 所有换班申请相关的路由都需要登录
+changeRoute.use("*", authMiddleware);
 
 // 创建换班申请
 changeRoute.post("/", createDutySwapController);

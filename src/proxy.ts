@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
   "/api/auth/login",
   "/_next",
   "/favicon.ico",
+  "/api/dutySchedule",
 ];
 
 /**
