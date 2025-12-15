@@ -9,12 +9,11 @@ import {
     swapDutySchedule,
 } from "./api";
 import {
-    CreateDutyChangeParams,
     GetAllDutyChangeParams,
     GetMyDutyChangeParams,
     SwapDutyScheduleParams,
 } from "../types";
-import { message } from "antd";
+import { toast } from "sonner";
 
 export const dutyChangeKeys = {
     all: ["dutyChange"] as const,
@@ -50,11 +49,11 @@ export const useCreateDutyChange = () => {
     return useMutation({
         mutationFn: createDutyChange,
         onSuccess: () => {
-            message.success("申请提交成功");
+            toast.success("申请提交成功");
             queryClient.invalidateQueries({ queryKey: dutyChangeKeys.all });
         },
         onError: (error: any) => {
-            message.error(error.message || "申请提交失败");
+            toast.error(error?.message || "申请提交失败");
         },
     });
 };
@@ -65,11 +64,11 @@ export const useApproveDutyChange = () => {
     return useMutation({
         mutationFn: approveDutyChange,
         onSuccess: () => {
-            message.success("已同意申请");
+            toast.success("已同意申请");
             queryClient.invalidateQueries({ queryKey: dutyChangeKeys.all });
         },
         onError: (error: any) => {
-            message.error(error.message || "操作失败");
+            toast.error(error?.message || "操作失败");
         },
     });
 };
@@ -80,11 +79,11 @@ export const useRejectDutyChange = () => {
     return useMutation({
         mutationFn: rejectDutyChange,
         onSuccess: () => {
-            message.success("已拒绝申请");
+            toast.success("已拒绝申请");
             queryClient.invalidateQueries({ queryKey: dutyChangeKeys.all });
         },
         onError: (error: any) => {
-            message.error(error.message || "操作失败");
+            toast.error(error?.message || "操作失败");
         },
     });
 };
@@ -95,11 +94,11 @@ export const useCancelDutyChange = () => {
     return useMutation({
         mutationFn: cancelDutyChange,
         onSuccess: () => {
-            message.success("已取消申请");
+            toast.success("已取消申请");
             queryClient.invalidateQueries({ queryKey: dutyChangeKeys.all });
         },
         onError: (error: any) => {
-            message.error(error.message || "操作失败");
+            toast.error(error?.message || "操作失败");
         },
     });
 };
@@ -110,11 +109,11 @@ export const useSwapDutySchedule = () => {
     return useMutation({
         mutationFn: (params: SwapDutyScheduleParams) => swapDutySchedule(params),
         onSuccess: () => {
-            message.success("排班已更新");
+            toast.success("排班已更新");
             queryClient.invalidateQueries({ queryKey: ["dutySchedule"] });
         },
         onError: (error: any) => {
-            message.error(error.message || "排班更新失败");
+            toast.error(error?.message || "排班更新失败");
         },
     });
 };

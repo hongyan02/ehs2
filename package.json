@@ -39,7 +39,6 @@
     "@tiptap/react": "^3",
     "@tiptap/starter-kit": "^3",
     "@types/bcryptjs": "^3.0.0",
-    "antd": "^6.0.0",
     "axios": "^1.12.2",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.4.6",

@@ -22,8 +22,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useMemo } from "react";
-import { message } from "antd";
 import { formatDateTime } from "@/utils";
+import { toast } from "sonner";
 
 export default function MyApprovalList() {
   const { username } = useInfoStore();
@@ -47,12 +47,12 @@ export default function MyApprovalList() {
 
   const handleApprove = (application: DutyChangeApplication) => {
     if (application.from_shift == null || application.to_shift == null) {
-      message.error("缺少班次信息，无法互换排班");
+      toast.error("缺少班次信息，无法互换排班");
       return;
     }
 
     if (application.from_shift !== application.to_shift) {
-      message.error("换班双方班次不一致，无法互换排班");
+      toast.error("换班双方班次不一致，无法互换排班");
       return;
     }
 
