@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
     TableHead,
     TableHeader,
@@ -22,29 +21,27 @@ const formatShift = (shift: number) => (shift === 0 ? "白班" : "夜班");
 export default function DutyInspectionView() {
     const [startDate, setStartDate] = useState<Date | undefined>(new Date());
     const [endDate, setEndDate] = useState<Date | undefined>(new Date());
-    const [query, setQuery] = useState<DutyInspectionParams | null>(null);
-
-    // Initial search on mount
-    useMemo(() => {
-        if (!query && startDate && endDate) {
-            const formattedStart = format(startDate, "yyyy-MM-dd");
-            const formattedEnd = format(endDate, "yyyy-MM-dd");
-            setQuery({
-                startDate: formattedStart,
-                endDate: formattedEnd,
-            });
-        }
-    }, []); // Only run once on mount
+    const [query, setQuery] = useState<DutyInspectionParams | null>(() => {
+        const today = format(new Date(), "yyyy-MM-dd");
+        return { startDate: today, endDate: today };
+    });
+    const didInitialSearchRef = useRef(false);
 
     const inspectionMutation = useDutyInspection();
+    const { mutate, mutateAsync, reset } = inspectionMutation;
 
-    // Trigger mutation when query changes
-    useMemo(() => {
-        if (query && !inspectionMutation.data && !inspectionMutation.isPending) {
-            inspectionMutation.mutate(query);
-        }
-    }, [query]);
+    useEffect(() => {
+        if (didInitialSearchRef.current) return;
+        didInitialSearchRef.current = true;
+
+        if (!query) return;
+        mutate(query);
+    }, [mutate, query]);
+
     const data = inspectionMutation.data ?? [];
+    const isSearching =
+        inspectionMutation.isPending ||
+        (query !== null && inspectionMutation.data === undefined && !inspectionMutation.isError);
 
     const handleSearch = async () => {
         if (!startDate || !endDate) {
@@ -65,10 +62,14 @@ export default function DutyInspectionView() {
             endDate: formattedEnd,
         };
 
-        setQuery(params);
+        setQuery((prev) => {
+            if (!prev) return params;
+            if (prev.startDate === params.startDate && prev.endDate === params.endDate) return prev;
+            return params;
+        });
         try {
-            await inspectionMutation.mutateAsync(params);
-        } catch (error) {
+            await mutateAsync(params);
+        } catch {
             toast.error("查询失败，请稍后重试");
         }
     };
@@ -77,13 +78,14 @@ export default function DutyInspectionView() {
         setStartDate(undefined);
         setEndDate(undefined);
         setQuery(null);
-        inspectionMutation.reset();
+        reset();
     };
 
     const summaryText = useMemo(() => {
         if (!query) return "请选择日期范围后查询";
+        if (isSearching) return "查询中，请稍候...";
         return `共 ${data.length} 条缺失日志`;
-    }, [data.length, query]);
+    }, [data.length, isSearching, query]);
 
     return (
         <div className="space-y-6">
@@ -130,7 +132,7 @@ export default function DutyInspectionView() {
                     )}
                 </div>
 
-                {inspectionMutation.isPending ? (
+                {isSearching ? (
                     <div className="py-10 text-center text-sm text-muted-foreground">
                         查询中，请稍候...
                     </div>
