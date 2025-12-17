@@ -9,7 +9,7 @@ import { DutyScheduleItem, useCreateDutySchedule, useUpdateDutySchedule } from "
 import { cn } from "@/utils/index";
 import zhCnLocale from "@fullcalendar/core/locales/zh-cn";
 import type { EventContentArg } from "@fullcalendar/core";
-import { ScheduleDialog } from "./ScheduleDialog";
+import { ScheduleDialog } from "./scheduleDialog";
 import { toast } from "sonner";
 
 type CalendarProps = {
