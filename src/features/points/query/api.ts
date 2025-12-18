@@ -61,6 +61,34 @@ export function createPointLog(data: any) {
     return request.post(API_SERVICE.points.logs, data, { headers: { isToken: false } });
 }
 
+export function deletePointLog(id: number) {
+    return request.delete(`${API_SERVICE.points.logs}/${id}`, { headers: { isToken: false } });
+}
+
 export function getPointRanking(month: string) {
     return request.get(API_SERVICE.points.ranking, { params: { month }, headers: { isToken: false } });
+}
+
+export function getPointTotalRanking() {
+    return request.get(`${API_SERVICE.points.ranking}/total`, { headers: { isToken: false } });
+}
+
+export function getKpiList(data: { nf: string; mon: string; qy: string; postId: string; depId: string }) {
+    return request.post(API_SERVICE.userInfo.selectKpi, data);
+}
+
+export function getKpiRecords(year: string) {
+    return request.get(API_SERVICE.points.kpi, { params: { year }, headers: { isToken: false } });
+}
+
+export function syncKpiRecords(data: any[]) {
+    return request.post(`${API_SERVICE.points.kpi}/sync`, data, { headers: { isToken: false } });
+}
+
+export function createKpiRecord(data: any) {
+    return request.post(API_SERVICE.points.kpi, data, { headers: { isToken: false } });
+}
+
+export function updateKpiRecord(id: number, data: any) {
+    return request.put(`${API_SERVICE.points.kpi}/${id}`, data, { headers: { isToken: false } });
 }

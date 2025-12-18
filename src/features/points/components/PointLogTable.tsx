@@ -2,6 +2,8 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 export interface PointLog {
     id: number;
@@ -20,9 +22,11 @@ export interface PointLog {
 interface PointLogTableProps {
     data: PointLog[];
     isLoading: boolean;
+    onDelete: (log: PointLog) => void;
+    deletingId?: number | null;
 }
 
-export default function PointLogTable({ data, isLoading }: PointLogTableProps) {
+export default function PointLogTable({ data, isLoading, onDelete, deletingId = null }: PointLogTableProps) {
     const columns: ColumnDef<PointLog>[] = [
         {
             accessorKey: "no",
@@ -50,12 +54,28 @@ export default function PointLogTable({ data, isLoading }: PointLogTableProps) {
             },
         },
         {
-            accessorKey: "description",
-            header: "描述",
-        },
-        {
             accessorKey: "createdAt",
             header: "时间",
+        },
+        {
+            id: "actions",
+            header: "操作",
+            cell: ({ row }) => {
+                const log = row.original;
+                const isDeleting = deletingId === log.id;
+                return (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-500 hover:text-red-600"
+                        disabled={isDeleting}
+                        onClick={() => onDelete(log)}
+                        aria-label="删除"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                );
+            },
         },
     ];
 

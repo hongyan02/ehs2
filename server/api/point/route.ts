@@ -7,20 +7,25 @@ import {
     createPointPersonController,
     deletePointCategoryController,
     deletePointEventController,
+    deletePointLogController,
     deletePointPersonController,
     getPointCategoriesController,
     getPointEventController,
     getPointLogController,
     getPointPersonController,
     getRankingController,
+    getTotalRankingController,
     updatePointCategoryController,
     updatePointEventController,
     updatePointPersonController,
 } from "./controller";
 
+import kpiRoute from "./kpi/route";
+
 const pointRoute = new Hono();
 
 // Auth for all routes
+pointRoute.route("/kpi", kpiRoute);
 pointRoute.use("*", authMiddleware);
 
 // --- Person Routes ---
@@ -44,6 +49,8 @@ pointRoute.delete("/events/:id", deletePointEventController);
 // --- Log Routes ---
 pointRoute.get("/logs", getPointLogController);
 pointRoute.post("/logs", createPointLogController);
+pointRoute.delete("/logs/:id", deletePointLogController);
 pointRoute.get("/ranking", getRankingController);
+pointRoute.get("/ranking/total", getTotalRankingController);
 
 export default pointRoute;

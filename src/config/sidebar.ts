@@ -41,9 +41,19 @@ export const menuItems: MenuItem[] = [
     },
     {
         title: "积分管理",
-        url: "/points",
         icon: Trophy,
-        require: "POINT",
+        items: [
+            {
+                title: "积分管理",
+                url: "/points/management",
+                require: "POINT",
+            },
+
+            {
+                title: "积分排名",
+                url: "/points/rank",
+            },
+        ],
     },
     {
         title: "值班管理",

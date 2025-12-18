@@ -1,5 +1,5 @@
-import { db } from "@server/db/db";
-import { pointCategories, pointEvent, pointLog, pointPerson } from "@server/db/schema";
+import { pgDb as db } from "@server/db/pg-db";
+import { pointCategories, pointEvent, pointLog, pointPerson } from "@server/db/pg-schema";
 import { and, desc, eq, like, sql } from "drizzle-orm";
 
 // -------------------- Point Person Services --------------------
@@ -36,7 +36,7 @@ export const getPointPersonList = async (params: GetPointPersonParams) => {
         .offset(offset)
         .orderBy(desc(pointPerson.createdAt));
 
-    return { total: totalResult.count, list: data };
+    return { total: Number(totalResult?.count || 0), list: data };
 };
 
 export const createPointPerson = async (payload: typeof pointPerson.$inferInsert) => {
@@ -124,7 +124,7 @@ export const getPointEventList = async (params: GetPointEventParams) => {
         .offset(offset)
         .orderBy(desc(pointEvent.createdAt));
 
-    return { total: totalResult.count, list: data };
+    return { total: Number(totalResult?.count || 0), list: data };
 };
 
 export const createPointEvent = async (payload: typeof pointEvent.$inferInsert) => {
@@ -177,7 +177,7 @@ export const getPointLogList = async (params: GetPointLogParams) => {
         .offset(offset)
         .orderBy(desc(pointLog.createdAt));
 
-    return { total: totalResult.count, list: data };
+    return { total: Number(totalResult?.count || 0), list: data };
 };
 
 export const createPointLog = async (payload: typeof pointLog.$inferInsert) => {
@@ -185,17 +185,48 @@ export const createPointLog = async (payload: typeof pointLog.$inferInsert) => {
     return result[0];
 };
 
+export const deletePointLog = async (id: number) => {
+    const result = await db.delete(pointLog).where(eq(pointLog.id, id)).returning();
+    return result[0];
+};
+
 export const getMonthlyRanking = async (month: string) => {
     const result = await db
         .select({
-            no: pointLog.no,
-            name: pointLog.name,
-            dept: pointLog.dept,
+            no: pointPerson.no,
+            name: pointPerson.name,
+            dept: pointPerson.dept,
+            totalPoints: sql<number>`COALESCE(sum(${pointLog.point}), 0)`,
+        })
+        .from(pointPerson)
+        .leftJoin(pointLog, and(eq(pointPerson.no, pointLog.no), eq(pointLog.month, month)))
+        .where(eq(pointPerson.active, 1))
+        .groupBy(pointPerson.no, pointPerson.name, pointPerson.dept)
+        .orderBy(desc(sql`COALESCE(sum(${pointLog.point}), 0)`));
+
+    // PG sum returns string for big numbers, coerce to number
+    return result.map(item => ({
+        ...item,
+        totalPoints: Number(item.totalPoints)
+    }));
+};
+
+export const getTotalRanking = async () => {
+    const result = await db
+        .select({
+            no: pointPerson.no,
+            name: pointPerson.name,
+            dept: pointPerson.dept,
             totalPoints: sql<number>`sum(${pointLog.point})`,
         })
-        .from(pointLog)
-        .where(eq(pointLog.month, month))
-        .groupBy(pointLog.no, pointLog.name, pointLog.dept)
+        .from(pointPerson)
+        .leftJoin(pointLog, eq(pointPerson.no, pointLog.no))
+        .where(eq(pointPerson.active, 1))
+        .groupBy(pointPerson.no, pointPerson.name, pointPerson.dept)
         .orderBy(desc(sql`sum(${pointLog.point})`));
-    return result;
+
+    return result.map(item => ({
+        ...item,
+        totalPoints: Number(item.totalPoints) || 0
+    })).sort((a, b) => b.totalPoints - a.totalPoints);
 };

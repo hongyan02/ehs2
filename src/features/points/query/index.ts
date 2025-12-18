@@ -6,15 +6,22 @@ import {
     createPointPerson,
     deletePointCategory,
     deletePointEvent,
+    deletePointLog,
     deletePointPerson,
     getPointCategoriesList,
     getPointEventList,
     getPointLogList,
     getPointPersonList,
     getPointRanking,
+    getPointTotalRanking,
     updatePointCategory,
     updatePointEvent,
     updatePointPerson,
+    getKpiList,
+    getKpiRecords,
+    syncKpiRecords,
+    createKpiRecord,
+    updateKpiRecord,
 } from "./api";
 
 // --- Person ---
@@ -150,9 +157,78 @@ export const useCreatePointLog = () => {
     });
 };
 
+export const useDeletePointLog = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: deletePointLog,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["pointLogList"] });
+            queryClient.invalidateQueries({ queryKey: ["pointRanking"] });
+        },
+    });
+};
+
 export const usePointRanking = (month: string) => {
     return useQuery({
         queryKey: ["pointRanking", month],
         queryFn: () => getPointRanking(month),
+    });
+};
+
+export const usePointTotalRanking = () => {
+    return useQuery({
+        queryKey: ["pointTotalRanking"],
+        queryFn: () => getPointTotalRanking(),
+    });
+};
+
+export const useKpiList = (params: { nf: string; mon: string }) => {
+    return useQuery({
+        queryKey: ["kpiList", params],
+        queryFn: () =>
+            getKpiList({
+                nf: params.nf,
+                mon: params.mon,
+                qy: "0",
+                postId: "4",
+                depId: "374",
+            }),
+    });
+};
+
+export const useKpiRecords = (year: string) => {
+    return useQuery({
+        queryKey: ["kpiRecords", year],
+        queryFn: () => getKpiRecords(year),
+    });
+};
+
+export const useSyncKpi = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: syncKpiRecords,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["kpiRecords"] });
+        },
+    });
+};
+
+export const useCreateKpi = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: createKpiRecord,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["kpiRecords"] });
+        },
+    });
+};
+
+export const useUpdateKpi = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: number; data: any }) => updateKpiRecord(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["kpiRecords"] });
+        },
     });
 };

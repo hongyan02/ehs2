@@ -64,6 +64,13 @@
       "when": 1765257255662,
       "tag": "0008_smart_overlord",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1766053692916,
+      "tag": "0009_daily_enchantress",
+      "breakpoints": true
     }
   ]
 }

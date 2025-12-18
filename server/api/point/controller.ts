@@ -7,6 +7,7 @@ import {
     createPointPerson,
     deletePointCategory,
     deletePointEvent,
+    deletePointLog,
     deletePointPerson,
     getMonthlyRanking,
     getPointCategoriesList,
@@ -17,6 +18,7 @@ import {
     updatePointEvent,
     updatePointPerson,
     getPointPersonByNo,
+    getTotalRanking,
 } from "./services";
 import dayjs from "dayjs";
 
@@ -83,7 +85,11 @@ export const getPointPersonController = async (c: Context) => {
         const result = await getPointPersonList(params);
         return c.json({ success: true, data: result });
     } catch (error) {
-        return c.json({ success: false, message: "参数错误" }, 400);
+        console.error("getPointPersonController error:", error);
+        if (error instanceof z.ZodError) {
+            return c.json({ success: false, message: "参数校验失败", issues: error.issues }, 400);
+        }
+        return c.json({ success: false, message: "获取人员列表失败" }, 500);
     }
 };
 
@@ -296,6 +302,19 @@ export const createPointLogController = async (c: Context) => {
     }
 };
 
+export const deletePointLogController = async (c: Context) => {
+    try {
+        const id = parseInt(c.req.param("id"));
+        const deleted = await deletePointLog(id);
+        if (!deleted) {
+            return c.json({ success: false, message: "记录不存在" }, 404);
+        }
+        return c.json({ success: true, message: "删除成功" });
+    } catch (error) {
+        return c.json({ success: false, message: "删除失败" }, 500);
+    }
+};
+
 export const getRankingController = async (c: Context) => {
     try {
         const month = c.req.query("month") || dayjs().format("YYYY-MM");
@@ -303,5 +322,15 @@ export const getRankingController = async (c: Context) => {
         return c.json({ success: true, data: result });
     } catch (error) {
         return c.json({ success: false, message: "获取排名失败" }, 500);
+    }
+}
+
+export const getTotalRankingController = async (c: Context) => {
+    try {
+        const result = await getTotalRanking();
+        return c.json({ success: true, data: result });
+    } catch (error) {
+        console.error(error);
+        return c.json({ success: false, message: "获取总排名失败" }, 500);
     }
 }

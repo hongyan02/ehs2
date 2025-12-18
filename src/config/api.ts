@@ -8,6 +8,7 @@ export const API_SERVICE = {
     userInfo: {
         getInfo: process.env.NEXT_PUBLIC_API_CONFIG_IMS + "/getInfo", //获取用户信息
         list: process.env.NEXT_PUBLIC_API_CONFIG_IMS + "/system/user/list", //获取用户列表
+        selectKpi: process.env.NEXT_PUBLIC_API_CONFIG_IMS + "/pa/point/selectKpiByTest", //获取用户列表
     },
     //webhook
     webhook: {
@@ -58,6 +59,7 @@ export const API_SERVICE = {
         events: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/point/events",
         logs: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/point/logs",
         ranking: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/point/ranking",
+        kpi: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/point/kpi",
     },
     scheduler: {
         task: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/scheduler/task",
