@@ -28,11 +28,16 @@ type FormValues = {
     enabled: boolean;
     shift: string;
     content: string;
+    startDate: string;
+    endDate: string;
+    rangeLabel: string;
+    extraMentionedList: string;
 };
 
 const JOB_KEY_OPTIONS = [
     { value: "send-duty-leader-text", label: "值班日志填写提醒" },
     { value: "send-duty-schedule-webhook", label: "领导带班通知推送" },
+    { value: "send-duty-log-inspection-webhook", label: "值班日志稽查提醒" },
 ];
 
 const formatDate = (val?: string | null) => {
@@ -57,39 +62,69 @@ export default function CornView() {
             enabled: true,
             shift: "0",
             content: "",
+            startDate: "",
+            endDate: "",
+            rangeLabel: "",
+            extraMentionedList: "",
         },
     });
+    const isInspectionJob =
+        form.watch("jobKey") === "send-duty-log-inspection-webhook";
 
-    const extractShift = (payload: unknown): string => {
+    const parsePayloadObject = (payload: unknown) => {
         if (typeof payload === "string") {
             try {
                 const parsed = JSON.parse(payload);
-                return parsed?.shift === 1 || parsed?.shift === "1" ? "1" : "0";
+                return parsed && typeof parsed === "object" ? parsed : null;
             } catch {
-                return "0";
+                return null;
             }
         }
-        if (payload && typeof payload === "object" && "shift" in payload) {
-            const value = (payload as { shift?: unknown }).shift;
+        if (payload && typeof payload === "object") return payload as Record<string, unknown>;
+        return null;
+    };
+
+    const extractShift = (payload: unknown): string => {
+        const parsed = parsePayloadObject(payload);
+        if (parsed && "shift" in parsed) {
+            const value = (parsed as { shift?: unknown }).shift;
             return value === 1 || value === "1" ? "1" : "0";
         }
         return "0";
     };
 
     const extractContent = (payload: unknown): string => {
-        if (typeof payload === "string") {
-            try {
-                const parsed = JSON.parse(payload);
-                return typeof parsed?.content === "string" ? parsed.content : "";
-            } catch {
-                return "";
-            }
-        }
-        if (payload && typeof payload === "object" && "content" in payload) {
-            const value = (payload as { content?: unknown }).content;
+        const parsed = parsePayloadObject(payload);
+        if (parsed && "content" in parsed) {
+            const value = (parsed as { content?: unknown }).content;
             return typeof value === "string" ? value : "";
         }
         return "";
+    };
+
+    const extractInspectionPayload = (payload: unknown) => {
+        const parsed = parsePayloadObject(payload);
+        if (!parsed) {
+            return { startDate: "", endDate: "", rangeLabel: "", extraMentionedList: "" };
+        }
+
+        const startDate =
+            typeof parsed.startDate === "string" ? parsed.startDate.trim() : "";
+        const endDate = typeof parsed.endDate === "string" ? parsed.endDate.trim() : "";
+        const rangeLabel =
+            typeof parsed.rangeLabel === "string" ? parsed.rangeLabel.trim() : "";
+
+        const extraMentionedList = Array.isArray(parsed.extraMentionedList)
+            ? (parsed.extraMentionedList as unknown[])
+                  .filter((item: unknown): item is string => typeof item === "string")
+                  .map((item: string) => item.trim())
+                  .filter((item: string) => item.length > 0)
+                  .join(", ")
+            : typeof parsed.extraMentionedList === "string"
+              ? parsed.extraMentionedList.trim()
+              : "";
+
+        return { startDate, endDate, rangeLabel, extraMentionedList };
     };
 
     const resetForm = (task?: SchedulerTask | null) => {
@@ -101,9 +136,15 @@ export default function CornView() {
                 enabled: true,
                 shift: "0",
                 content: "",
+                startDate: "",
+                endDate: "",
+                rangeLabel: "",
+                extraMentionedList: "",
             });
             return;
         }
+
+        const inspectionPayload = extractInspectionPayload(task.payload);
 
         form.reset({
             name: task.name,
@@ -112,21 +153,40 @@ export default function CornView() {
             enabled: !!task.enabled,
             shift: extractShift(task.payload),
             content: extractContent(task.payload),
+            startDate: inspectionPayload.startDate,
+            endDate: inspectionPayload.endDate,
+            rangeLabel: inspectionPayload.rangeLabel,
+            extraMentionedList: inspectionPayload.extraMentionedList,
         });
     };
 
     const handleSubmit = async (values: FormValues) => {
-        const shift = values.shift === "1" ? 1 : 0;
         const payload: SchedulerTaskPayload = {
             name: values.name.trim(),
             jobKey: values.jobKey,
             cron: values.cron.trim() ? values.cron.trim() : null,
             enabled: values.enabled,
-            payload: {
+        };
+
+        if (values.jobKey === "send-duty-log-inspection-webhook") {
+            const extraMentionedList = values.extraMentionedList
+                .split(/[,\s]+/)
+                .map((item: string) => item.trim())
+                .filter((item: string) => item.length > 0);
+
+            payload.payload = {
+                startDate: values.startDate.trim() || undefined,
+                endDate: values.endDate.trim() || undefined,
+                rangeLabel: values.rangeLabel.trim() || undefined,
+                extraMentionedList: extraMentionedList.length > 0 ? extraMentionedList : undefined,
+            };
+        } else {
+            const shift = values.shift === "1" ? 1 : 0;
+            payload.payload = {
                 shift,
                 content: values.content?.trim() || undefined,
-            },
-        };
+            };
+        }
 
         try {
             if (editing) {
@@ -191,13 +251,40 @@ export default function CornView() {
         },
         {
             accessorKey: "payload",
-            header: "班次",
-            cell: ({ row }) => (extractShift(row.original.payload) === "1" ? "夜班" : "白班"),
+            header: "参数",
+            cell: ({ row }) => {
+                if (row.original.jobKey === "send-duty-log-inspection-webhook") {
+                    const { startDate, endDate } = extractInspectionPayload(row.original.payload);
+                    if (!startDate && !endDate) return "-";
+                    return `${startDate || "-"} ~ ${endDate || "-"}`;
+                }
+                return extractShift(row.original.payload) === "1" ? "夜班" : "白班";
+            },
         },
         {
             accessorKey: "payloadContent",
-            header: "自定义内容",
+            header: "内容/额外@",
             cell: ({ row }) => {
+                if (row.original.jobKey === "send-duty-log-inspection-webhook") {
+                    const { rangeLabel, extraMentionedList } = extractInspectionPayload(
+                        row.original.payload
+                    );
+                    const pieces = [
+                        rangeLabel ? `范围：${rangeLabel}` : "",
+                        extraMentionedList ? `额外@：${extraMentionedList}` : "",
+                    ]
+                        .map((item) => item.trim())
+                        .filter((item) => item.length > 0);
+
+                    return pieces.length > 0 ? (
+                        <span className="line-clamp-2 max-w-xs break-all">
+                            {pieces.join("，")}
+                        </span>
+                    ) : (
+                        "-"
+                    );
+                }
+
                 const content = extractContent(row.original.payload);
                 return content ? (
                     <span className="line-clamp-2 max-w-xs break-all">{content}</span>
@@ -346,27 +433,71 @@ export default function CornView() {
                             />
                             <Label htmlFor="enabled">启用</Label>
                         </div>
+                        {isInspectionJob ? (
+                            <>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="startDate">稽查开始日期</Label>
+                                        <Input
+                                            id="startDate"
+                                            placeholder="YYYY-MM-DD"
+                                            {...form.register("startDate")}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="endDate">稽查结束日期</Label>
+                                        <Input
+                                            id="endDate"
+                                            placeholder="YYYY-MM-DD"
+                                            {...form.register("endDate")}
+                                        />
+                                    </div>
+                                </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="shift">班次</Label>
-                            <select
-                                id="shift"
-                                className="w-full rounded-md border px-3 py-2 text-sm"
-                                {...form.register("shift")}
-                            >
-                                <option value="0">白班</option>
-                                <option value="1">夜班</option>
-                            </select>
-                        </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="rangeLabel">范围文案（可选）</Label>
+                                    <Input
+                                        id="rangeLabel"
+                                        placeholder="默认：上周"
+                                        {...form.register("rangeLabel")}
+                                    />
+                                </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="content">自定义内容（可选）</Label>
-                            <Input
-                                id="content"
-                                placeholder="不填写则使用默认提醒文案"
-                                {...form.register("content")}
-                            />
-                        </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="extraMentionedList">
+                                        额外@人员（工号/账号，用逗号分隔）
+                                    </Label>
+                                    <Input
+                                        id="extraMentionedList"
+                                        placeholder="例如：zhangsan, lisi"
+                                        {...form.register("extraMentionedList")}
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="shift">班次</Label>
+                                    <select
+                                        id="shift"
+                                        className="w-full rounded-md border px-3 py-2 text-sm"
+                                        {...form.register("shift")}
+                                    >
+                                        <option value="0">白班</option>
+                                        <option value="1">夜班</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="content">自定义内容（可选）</Label>
+                                    <Input
+                                        id="content"
+                                        placeholder="不填写则使用默认提醒文案"
+                                        {...form.register("content")}
+                                    />
+                                </div>
+                            </>
+                        )}
 
                         <div className="flex justify-end gap-2 pt-2">
                             <Button
