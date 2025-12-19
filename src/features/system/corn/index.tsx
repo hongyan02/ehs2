@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { ColumnDef } from "@tanstack/react-table";
 import { toast } from "sonner";
 
@@ -68,8 +68,8 @@ export default function CornView() {
             extraMentionedList: "",
         },
     });
-    const isInspectionJob =
-        form.watch("jobKey") === "send-duty-log-inspection-webhook";
+    const jobKey = useWatch({ control: form.control, name: "jobKey" });
+    const isInspectionJob = jobKey === "send-duty-log-inspection-webhook";
 
     const parsePayloadObject = (payload: unknown) => {
         if (typeof payload === "string") {
