@@ -33,10 +33,6 @@ export const menuItems: MenuItem[] = [
                 title: "推送管理",
                 url: "/system/webhook",
             },
-            {
-                title: "定时任务",
-                url: "/system/corn",
-            },
         ],
     },
     {

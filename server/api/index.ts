@@ -15,8 +15,6 @@ import pointRoute from "./point/route";
 import webhookRoute from "./webhook/route";
 import { customLogger } from "../middleware/logger";
 import wxWorkDutyLogRoute from "./wxWork/dutyLog/route";
-import schedulerRoute from "./scheduler/route";
-import { startScheduler } from "../utils/scheduler";
 
 const app = new Hono().basePath("/api");
 
@@ -39,10 +37,6 @@ app.route("/goods/materialLog", materialLogRoute);
 app.route("/system/permissions", permissionsRoute);
 app.route("/point", pointRoute);
 app.route("/wxWork/dutyLog", wxWorkDutyLogRoute);
-app.route("/scheduler", schedulerRoute);
-
-// 启动定时任务调度器
-startScheduler();
 
 export { app };
 

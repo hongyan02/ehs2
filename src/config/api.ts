@@ -61,7 +61,4 @@ export const API_SERVICE = {
         ranking: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/point/ranking",
         kpi: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/point/kpi",
     },
-    scheduler: {
-        task: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/scheduler/task",
-    },
 };

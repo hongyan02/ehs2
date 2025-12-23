@@ -16,6 +16,8 @@ const PUBLIC_PATHS = [
   "/_next",
   "/favicon.ico",
   "/api/dutySchedule",
+  "/api/webhook",
+  "/api/wxWork",
 ];
 
 /**
