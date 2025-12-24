@@ -79,7 +79,7 @@ export async function proxy(request: NextRequest) {
 
     // 5. Allow access
     return NextResponse.next();
-  } catch (e) {
+  } catch {
     // Token invalid or expired
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname + request.nextUrl.search);

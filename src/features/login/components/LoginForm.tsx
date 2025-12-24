@@ -85,7 +85,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="login-form w-full max-w-[400px] mx-auto p-8 bg-white/80 backdrop-blur-sm rounded-lg"
+      className="login-form w-full max-w-100 mx-auto p-8 bg-white/80 backdrop-blur-sm rounded-lg"
     >
       {errorMessage && (
         <Alert variant="destructive" className="mb-6">
