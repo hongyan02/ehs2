@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@server/db/db";
-import { dutySchedule, webhookConfig } from "@server/db/schema";
+import { dutySchedule, dutyStaff, webhookConfig } from "@server/db/schema";
 
 const SCENE_DUTY_SCHEDULE = "领导带班通知";
 
@@ -27,7 +27,15 @@ export type DutyScheduleWebhookResult = {
     response: WeComWebhookResponse;
 };
 
-type DutyScheduleRecord = typeof dutySchedule.$inferSelect;
+type DutyScheduleRecord = {
+    id: number;
+    date: string;
+    shift: number;
+    name: string;
+    no: string;
+    position: string | null;
+    phone: string | null;
+};
 
 const buildWebhookUrl = (key: string) => {
     const baseUrl = (process.env.WEBHOOK_BASE_URL ?? DEFAULT_WEBHOOK_BASE_URL).trim();
@@ -66,8 +74,17 @@ const formatDateZh = (date: string) => {
 
 const getDutyScheduleForShift = async (date: string, shift: number) => {
     const rows = await db
-        .select()
+        .select({
+            id: dutySchedule.id,
+            date: dutySchedule.date,
+            shift: dutySchedule.shift,
+            name: dutySchedule.name,
+            no: dutySchedule.no,
+            position: dutySchedule.position,
+            phone: dutyStaff.phone,
+        })
         .from(dutySchedule)
+        .leftJoin(dutyStaff, eq(dutySchedule.no, dutyStaff.no))
         .where(and(eq(dutySchedule.date, date), eq(dutySchedule.shift, shift)));
 
     return rows;
@@ -76,7 +93,11 @@ const getDutyScheduleForShift = async (date: string, shift: number) => {
 const getNamesByPosition = (records: DutyScheduleRecord[], position: string) => {
     const names = records
         .filter((item) => (item.position ?? "").trim() === position)
-        .map((item) => item.name.trim())
+        .map((item) => {
+            const name = item.name.trim();
+            const phone = (item.phone ?? "").trim();
+            return `${name} 电话：${phone || "未录入"}`;
+        })
         .filter((item) => item.length > 0);
 
     if (names.length === 0) return "未排班";
@@ -96,7 +117,8 @@ const buildDefaultContent = (records: DutyScheduleRecord[], date: string, shift:
     return [
         "【8BU-60工厂领导带班通知】",
         `1、时间:${formatDateZh(date)} ${shiftLabel}（${timeRange}）`,
-        `2、值班领导：${leader} 带班干部：${cadre} 安全管理人员：${manager} 安全员：${officer}`,
+        `2、值班领导：${leader} 带班干部：${cadre}`,
+        `   安全管理人员：${manager} 安全员：${officer}`,
         "3、请值班领导做好值班巡视工作，如遇不可抗拒因素无法到岗的，必须提前指定好同级别或及高一级领导代理值班并及时反馈安环部；",
         "4、值班领导需要全程佩戴对讲机，必须佩戴袖标。对讲机由安环部提供；",
         "5、巡查要求:值班领导巡查期间，请重点对现场危险作业、施工现场、酒后上岗、携带火种进车间、网格员在岗情况等进行严格检查，并将检查出的问题如实记录在EHS系统上的在线日志中，并告知当班安全员进行督促整改；",

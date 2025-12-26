@@ -18,6 +18,9 @@ const PUBLIC_PATHS = [
   "/api/dutySchedule",
   "/api/webhook",
   "/api/wxWork",
+  "/api/point/ranking",
+  "/api/point/kpi",
+  "/api/point/logs"
 ];
 
 /**

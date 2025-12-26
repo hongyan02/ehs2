@@ -26,30 +26,29 @@ const pointRoute = new Hono();
 
 // Auth for all routes
 pointRoute.route("/kpi", kpiRoute);
-pointRoute.use("*", authMiddleware);
 
 // --- Person Routes ---
 pointRoute.get("/person", getPointPersonController);
-pointRoute.post("/person", createPointPersonController);
-pointRoute.put("/person/:id", updatePointPersonController);
-pointRoute.delete("/person/:id", deletePointPersonController);
+pointRoute.post("/person", authMiddleware, createPointPersonController);
+pointRoute.put("/person/:id", authMiddleware, updatePointPersonController);
+pointRoute.delete("/person/:id", authMiddleware, deletePointPersonController);
 
 // --- Category Routes ---
 pointRoute.get("/categories", getPointCategoriesController);
-pointRoute.post("/categories", createPointCategoryController);
-pointRoute.put("/categories/:id", updatePointCategoryController);
-pointRoute.delete("/categories/:id", deletePointCategoryController);
+pointRoute.post("/categories", authMiddleware, createPointCategoryController);
+pointRoute.put("/categories/:id", authMiddleware, updatePointCategoryController);
+pointRoute.delete("/categories/:id", authMiddleware, deletePointCategoryController);
 
 // --- Event Routes ---
 pointRoute.get("/events", getPointEventController);
-pointRoute.post("/events", createPointEventController);
-pointRoute.put("/events/:id", updatePointEventController);
-pointRoute.delete("/events/:id", deletePointEventController);
+pointRoute.post("/events", authMiddleware, createPointEventController);
+pointRoute.put("/events/:id", authMiddleware, updatePointEventController);
+pointRoute.delete("/events/:id", authMiddleware, deletePointEventController);
 
 // --- Log Routes ---
 pointRoute.get("/logs", getPointLogController);
-pointRoute.post("/logs", createPointLogController);
-pointRoute.delete("/logs/:id", deletePointLogController);
+pointRoute.post("/logs", authMiddleware, createPointLogController);
+pointRoute.delete("/logs/:id", authMiddleware, deletePointLogController);
 pointRoute.get("/ranking", getRankingController);
 pointRoute.get("/ranking/total", getTotalRankingController);
 
