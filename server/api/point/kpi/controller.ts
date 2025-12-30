@@ -1,6 +1,5 @@
 import { Context } from "hono";
 import { getKpiList, syncKpiList, createKpiRecord, updateKpiRecord } from "./service";
-import { syncKpiSchema } from "./kpi-schema";
 
 export const getKpi = async (c: Context) => {
     const year = c.req.query("year") || "2025";
@@ -35,7 +34,7 @@ export const createKpiController = async (c: Context) => {
         const result = await createKpiRecord(body);
         return c.json({ success: true, data: result });
     } catch (error) {
-        return c.json({ success: false, message: "创建失败" }, 500);
+        return c.json({ success: false, message: "创建失败," + error }, 500);
     }
 };
 
@@ -46,6 +45,6 @@ export const updateKpiController = async (c: Context) => {
         const result = await updateKpiRecord(id, body);
         return c.json({ success: true, data: result });
     } catch (error) {
-        return c.json({ success: false, message: "更新失败" }, 500);
+        return c.json({ success: false, message: "更新失败," + error }, 500);
     }
 };
