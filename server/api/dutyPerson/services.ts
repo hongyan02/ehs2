@@ -4,6 +4,13 @@ import { and, desc, eq, like } from "drizzle-orm";
 
 type DutyStaffInsert = typeof dutyStaff.$inferInsert;
 
+export class DutyPersonNoAlreadyExistsError extends Error {
+  constructor() {
+    super("该工号已存在");
+    this.name = "DutyPersonNoAlreadyExistsError";
+  }
+}
+
 export interface GetDutyPersonsParams {
   page?: number;
   pageSize?: number;
@@ -78,6 +85,15 @@ export const getDutyPersonById = async (id: number) => {
 };
 
 export const createDutyPerson = async (params: CreateDutyPersonParams) => {
+  const existing = await db
+    .select({ id: dutyStaff.id })
+    .from(dutyStaff)
+    .where(eq(dutyStaff.no, params.no));
+
+  if (existing.length > 0) {
+    throw new DutyPersonNoAlreadyExistsError();
+  }
+
   const result = await db
     .insert(dutyStaff)
     .values({

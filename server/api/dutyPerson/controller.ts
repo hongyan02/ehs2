@@ -4,6 +4,7 @@ import {
     getDutyPersons,
     getDutyPersonById,
     createDutyPerson,
+    DutyPersonNoAlreadyExistsError,
     updateDutyPerson,
     deleteDutyPerson,
 } from "./services";
@@ -106,6 +107,9 @@ export const createDutyPersonController = async (c: Context) => {
     } catch (error) {
         if (error instanceof z.ZodError) {
             return c.json({ success: false, message: error.issues }, 400);
+        }
+        if (error instanceof DutyPersonNoAlreadyExistsError) {
+            return c.json({ success: false, message: error.message }, 400);
         }
         console.error("createDutyPersonController error:", error);
         return c.json({ success: false, message: "服务器错误" }, 500);
