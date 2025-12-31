@@ -18,6 +18,7 @@ export const API_SERVICE = {
     //值班日志
     dutyLog: {
         dutyLog: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/dutyLog", //CRUD操作
+        myDutyLog: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/dutyLog/my", //查询当前用户自己的日志
         inspection:
             process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/dutyLog/Inspection", //值班日志稽查
     },

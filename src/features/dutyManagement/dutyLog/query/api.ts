@@ -29,6 +29,14 @@ export function getDutyLogs(params: GetDutyLogsParams) {
   });
 }
 
+// 获取当前用户自己的值班日志列表（带分页）
+export function getMyDutyLogs(params: GetDutyLogsParams) {
+  return request.get(API_SERVICE.dutyLog.myDutyLog, {
+    params,
+    headers: { isToken: false },
+  });
+}
+
 // 根据ID获取值班日志
 export function getDutyLogById(id: number) {
   return request.get(`${API_SERVICE.dutyLog.dutyLog}/${id}`, {

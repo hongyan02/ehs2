@@ -20,16 +20,31 @@ export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(
 
         try {
             const jwtSecret = process.env.JWT_SECRET || "default_secret_please_change";
-            const payload = await verify(token, jwtSecret);
+            const payload = (await verify(token, jwtSecret)) as Record<string, unknown>;
+
+            const employeeId =
+                (payload.employeeId as string | undefined) ??
+                (payload.sub as string | undefined) ??
+                (payload.username as string | undefined) ??
+                "";
+            const name =
+                (payload.name as string | undefined) ??
+                (payload.nickName as string | undefined) ??
+                (payload.username as string | undefined) ??
+                employeeId;
+
+            if (!employeeId) {
+                return c.json({ error: "Unauthorized: Invalid token payload" }, 401);
+            }
 
             c.set("user", {
-                employeeId: payload.sub as string,
-                name: payload.name as string,
+                employeeId,
+                name,
                 permissions: (payload.permissions as string[]) || [],
             });
 
             await next();
-        } catch (e) {
+        } catch (_e) {
             return c.json({ error: "Unauthorized: Invalid token" }, 401);
         }
     }

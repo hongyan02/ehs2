@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getDutyLogs,
+  getMyDutyLogs,
   getDutyLogById,
   createDutyLog,
   updateDutyLog,
@@ -67,6 +68,39 @@ export const useDutyLogs = (params: GetDutyLogsParams) => {
 };
 
 /**
+ * 当前用户自己的值班日志查询Hook（支持分页）
+ */
+export const useMyDutyLogs = (params: GetDutyLogsParams) => {
+  return useQuery<PaginatedResponse<DutyLogData>>({
+    queryKey: ["myDutyLogs", params],
+    queryFn: async () => {
+      try {
+        const res = await getMyDutyLogs(params);
+        if (res?.data?.data) {
+          return res.data.data;
+        }
+        return {
+          data: [],
+          total: 0,
+          page: params.page || 1,
+          pageSize: params.pageSize || 10,
+          totalPages: 0,
+        };
+      } catch (error) {
+        console.error("获取个人值班日志失败:", error);
+        return {
+          data: [],
+          total: 0,
+          page: params.page || 1,
+          pageSize: params.pageSize || 10,
+          totalPages: 0,
+        };
+      }
+    },
+  });
+};
+
+/**
  * 根据ID查询值班日志Hook
  */
 export const useDutyLogById = (id: number, enabled = true) => {
@@ -94,6 +128,7 @@ export const useCreateDutyLog = () => {
     onSuccess: () => {
       // 刷新列表
       queryClient.invalidateQueries({ queryKey: ["dutyLogs"] });
+      queryClient.invalidateQueries({ queryKey: ["myDutyLogs"] });
     },
   });
 };
@@ -118,6 +153,7 @@ export const useUpdateDutyLog = () => {
     onSuccess: () => {
       // 刷新列表和详情
       queryClient.invalidateQueries({ queryKey: ["dutyLogs"] });
+      queryClient.invalidateQueries({ queryKey: ["myDutyLogs"] });
       queryClient.invalidateQueries({ queryKey: ["dutyLog"] });
     },
   });
@@ -137,6 +173,7 @@ export const useDeleteDutyLog = () => {
     onSuccess: () => {
       // 刷新列表
       queryClient.invalidateQueries({ queryKey: ["dutyLogs"] });
+      queryClient.invalidateQueries({ queryKey: ["myDutyLogs"] });
     },
   });
 };
@@ -176,6 +213,7 @@ export const useCreateDutyLogWithWebhook = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dutyLogs"] });
+      queryClient.invalidateQueries({ queryKey: ["myDutyLogs"] });
     },
   });
 };

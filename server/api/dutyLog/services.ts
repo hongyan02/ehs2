@@ -8,6 +8,7 @@ export interface GetDutyLogsParams {
     startDate?: string; // YYYY-MM-DD
     endDate?: string; // YYYY-MM-DD
     shift?: number; // 0=白班，1=夜班
+    no?: string; // 工号
 }
 
 export interface CreateDutyLogParams {
@@ -49,7 +50,7 @@ export interface MissingDutyLog {
  */
 export const getDutyLogs = async (params: GetDutyLogsParams) => {
     console.log("getDutyLogs called with params:", params);
-    const { page = 1, pageSize = 10, startDate, endDate, shift } = params;
+    const { page = 1, pageSize = 10, startDate, endDate, shift, no } = params;
 
     try {
         // 构建查询条件
@@ -62,6 +63,9 @@ export const getDutyLogs = async (params: GetDutyLogsParams) => {
         }
         if (shift !== undefined) {
             conditions.push(eq(dutyLog.shift, shift));
+        }
+        if (no) {
+            conditions.push(eq(dutyLog.no, no));
         }
 
         const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

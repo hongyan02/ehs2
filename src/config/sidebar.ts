@@ -61,6 +61,11 @@ export const menuItems: MenuItem[] = [
                 require: "DUTY",
             },
             {
+                title: "全部日志",
+                url: "/dutyManagement/dutyLog/all",
+                require: "DUTY",
+            },
+            {
                 title: "值班日志",
                 url: "/dutyManagement/dutyLog",
             },

@@ -1,6 +1,8 @@
 import { Hono } from "hono";
+import { authMiddleware } from "@server/middleware/auth";
 import {
     getDutyLogsController,
+    getMyDutyLogsController,
     getDutyLogByIdController,
     createDutyLogController,
     updateDutyLogController,
@@ -12,6 +14,9 @@ const dutyLogRoute = new Hono();
 
 // 获取值班日志列表（支持分页和过滤）
 dutyLogRoute.get("/", getDutyLogsController);
+
+// 获取当前用户自己的值班日志列表（支持分页和过滤）
+dutyLogRoute.get("/my", authMiddleware, getMyDutyLogsController);
 
 // 查询未按时填写的值班日志
 dutyLogRoute.post("/Inspection", dutyLogInspectionController);

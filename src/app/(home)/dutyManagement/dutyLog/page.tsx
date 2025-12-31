@@ -1,9 +1,9 @@
-import DutyLogView from "@/features/dutyManagement/dutyLog";
+import MyDutyLogView from "@/features/dutyManagement/dutyLog/myView";
 
 export default function DutyLogPage() {
-  return (
-    <>
-      <DutyLogView />
-    </>
-  );
+    return (
+        <>
+            <MyDutyLogView />
+        </>
+    );
 }

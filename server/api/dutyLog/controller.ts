@@ -74,6 +74,34 @@ export const getDutyLogsController = async (c: Context) => {
 };
 
 /**
+ * 获取当前用户自己的值班日志列表（支持分页和过滤）
+ */
+export const getMyDutyLogsController = async (c: Context) => {
+    try {
+        const query = c.req.query();
+        const params = getDutyLogsSchema.parse(query);
+        const user = c.get("user") as { employeeId?: string } | undefined;
+
+        if (!user?.employeeId) {
+            return c.json({ success: false, message: "未获取到用户信息" }, 401);
+        }
+
+        const result = await getDutyLogs({
+            ...params,
+            no: user.employeeId,
+        });
+
+        return c.json({ success: true, data: result });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return c.json({ success: false, message: error.issues }, 400);
+        }
+        console.error("getMyDutyLogsController error:", error);
+        return c.json({ success: false, message: "服务器错误" }, 500);
+    }
+};
+
+/**
  * 根据ID获取值班日志
  */
 export const getDutyLogByIdController = async (c: Context) => {
@@ -87,7 +115,7 @@ export const getDutyLogByIdController = async (c: Context) => {
             return c.json({ success: false, message: "未找到该日志" }, 404);
         }
         return c.json({ success: true, data: result });
-    } catch (error) {
+    } catch (_error) {
         return c.json({ success: false, message: "服务器错误" }, 500);
     }
 };
@@ -171,7 +199,7 @@ export const deleteDutyLogController = async (c: Context) => {
 
         await deleteDutyLog(id);
         return c.json({ success: true, message: "删除成功" });
-    } catch (error) {
+    } catch (_error) {
         return c.json({ success: false, message: "服务器错误" }, 500);
     }
 };
