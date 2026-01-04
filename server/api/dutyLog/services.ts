@@ -49,7 +49,7 @@ export interface MissingDutyLog {
  * 获取值班日志列表（支持分页和过滤）
  */
 export const getDutyLogs = async (params: GetDutyLogsParams) => {
-    console.log("getDutyLogs called with params:", params);
+    // console.log("getDutyLogs called with params:", params);
     const { page = 1, pageSize = 10, startDate, endDate, shift, no } = params;
 
     try {
@@ -69,20 +69,20 @@ export const getDutyLogs = async (params: GetDutyLogsParams) => {
         }
 
         const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-        console.log("Where clause:", whereClause);
+        // console.log("Where clause:", whereClause);
 
         // 查询总数 - 方法1：直接查询所有数据然后计数
-        console.log("Querying all data for count...");
+        // console.log("Querying all data for count...");
         const allData = await db
             .select()
             .from(dutyLog)
             .where(whereClause);
         const total = allData.length;
-        console.log("Total records:", total);
+        // console.log("Total records:", total);
 
         // 查询数据（分页）
         const offset = (page - 1) * pageSize;
-        console.log("Querying paginated data...", { offset, limit: pageSize });
+        // console.log("Querying paginated data...", { offset, limit: pageSize });
         const data = await db
             .select()
             .from(dutyLog)
@@ -90,7 +90,7 @@ export const getDutyLogs = async (params: GetDutyLogsParams) => {
             .orderBy(desc(dutyLog.date), desc(dutyLog.shift))
             .limit(pageSize)
             .offset(offset);
-        console.log("Paginated data count:", data.length);
+        // console.log("Paginated data count:", data.length);
 
         return {
             data,
