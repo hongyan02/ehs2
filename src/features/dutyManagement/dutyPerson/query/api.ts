@@ -6,7 +6,6 @@ export interface GetDutyPersonParams {
   pageSize?: number;
   name?: string;
   no?: string;
-  shift?: number;
 }
 
 export interface DutyPersonData {
@@ -14,7 +13,6 @@ export interface DutyPersonData {
   name: string;
   no: string;
   position?: string | null;
-  shift: number;
   phone?: string | null;
 }
 

@@ -16,59 +16,54 @@ export const dutyPersonColumns = (
   onEdit: (person: DutyPersonData) => void,
   onDelete: (id: number) => void,
 ): ColumnDef<DutyPersonData, any>[] => [
-    column.accessor("no", {
-      header: "工号",
-      cell: (info) => info.getValue(),
-    }),
+  column.accessor("no", {
+    header: "工号",
+    cell: (info) => info.getValue(),
+  }),
 
-    column.accessor("name", {
-      header: "姓名",
-      cell: (info) => info.getValue(),
-    }),
+  column.accessor("name", {
+    header: "姓名",
+    cell: (info) => info.getValue(),
+  }),
 
-    column.accessor("position", {
-      header: "职位",
-      cell: (info) => info.getValue() ?? "-",
-    }),
+  column.accessor("position", {
+    header: "职位",
+    cell: (info) => info.getValue() ?? "-",
+  }),
 
-    column.accessor("shift", {
-      header: "班次",
-      cell: (info) => (info.getValue() === 0 ? "白班" : "夜班"),
-    }),
+  column.accessor("phone", {
+    header: "手机号",
+    cell: (info) => info.getValue(),
+  }),
 
-    column.accessor("phone", {
-      header: "手机号",
-      cell: (info) => info.getValue(),
-    }),
-
-    column.display({
-      id: "actions",
-      header: "操作",
-      cell: (info) => {
-        const row = info.row.original;
-        return (
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-blue-600 hover:text-blue-800"
-              onClick={() => onEdit(row)}
-            >
-              编辑
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-red-600 hover:text-red-800"
-              onClick={() => row.id && onDelete(row.id)}
-            >
-              删除
-            </Button>
-          </div>
-        );
-      },
-    }),
-  ];
+  column.display({
+    id: "actions",
+    header: "操作",
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-blue-600 hover:text-blue-800"
+            onClick={() => onEdit(row)}
+          >
+            编辑
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-red-600 hover:text-red-800"
+            onClick={() => row.id && onDelete(row.id)}
+          >
+            删除
+          </Button>
+        </div>
+      );
+    },
+  }),
+];
 
 interface PersonTableProps {
   data: DutyPersonData[];
@@ -98,9 +93,9 @@ export default function PersonTable({
                   {header.isPlaceholder
                     ? null
                     : flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                 </th>
               ))}
             </tr>

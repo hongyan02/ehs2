@@ -3,19 +3,10 @@
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 
 export interface SearchFormData {
     name?: string;
     no?: string;
-    shift?: number;
 }
 
 interface SearchFormProps {
@@ -25,17 +16,11 @@ interface SearchFormProps {
 
 export default function SearchForm({ onSearch, onReset }: SearchFormProps) {
     const { register, handleSubmit, reset } = useForm<SearchFormData>();
-    const [shift, setShift] = useState<number | undefined>();
-    const shiftValue = shift !== undefined ? String(shift) : "all";
 
     const onSubmit = (data: SearchFormData) => {
         const formData: SearchFormData = {
             ...data,
         };
-
-        if (shift !== undefined) {
-            formData.shift = shift;
-        }
 
         // 过滤空字符串
         if (!formData.name) delete formData.name;
@@ -45,7 +30,6 @@ export default function SearchForm({ onSearch, onReset }: SearchFormProps) {
     };
 
     const handleReset = () => {
-        setShift(undefined);
         reset();
         onReset?.();
     };
@@ -73,26 +57,6 @@ export default function SearchForm({ onSearch, onReset }: SearchFormProps) {
                             {...register("no")}
                         />
                     </div>
-                </div>
-
-                {/* 班次选择 */}
-                <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium whitespace-nowrap">班次</label>
-                    <Select
-                        value={shiftValue}
-                        onValueChange={(value) =>
-                            setShift(value === "all" ? undefined : Number(value))
-                        }
-                    >
-                        <SelectTrigger className="w-[120px]">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">全部</SelectItem>
-                            <SelectItem value="0">白班</SelectItem>
-                            <SelectItem value="1">夜班</SelectItem>
-                        </SelectContent>
-                    </Select>
                 </div>
 
                 {/* 按钮 */}

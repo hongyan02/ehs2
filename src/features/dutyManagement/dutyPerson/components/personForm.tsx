@@ -24,7 +24,6 @@ const formSchema = z.object({
   name: z.string().min(1, "请输入姓名"),
   no: z.string().min(1, "请输入工号"),
   position: z.string().optional(),
-  shift: z.string(), // Select value is string
   phone: z.string().min(1, "请输入手机号"),
 });
 
@@ -66,8 +65,6 @@ export default function PersonForm({
       name: defaultValues?.name || "",
       no: defaultValues?.no || "",
       position: defaultValues?.position || "",
-      shift:
-        defaultValues?.shift !== undefined ? String(defaultValues.shift) : "0",
       phone: defaultValues?.phone || "",
     },
   });
@@ -89,7 +86,6 @@ export default function PersonForm({
       name: values.name,
       no: values.no,
       position: values.position || null,
-      shift: Number(values.shift),
       phone: values.phone,
     });
   };
@@ -121,32 +117,6 @@ export default function PersonForm({
               </Select>
             )}
           />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-            班次 <span className="text-red-500">*</span>
-          </label>
-          <Controller
-            control={control}
-            name="shift"
-            render={({ field }) => (
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <SelectTrigger>
-                  <SelectValue placeholder="选择班次" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">白班</SelectItem>
-                  <SelectItem value="1">夜班</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {errors.shift && (
-            <p className="text-sm font-medium text-red-500">
-              {errors.shift.message}
-            </p>
-          )}
         </div>
       </div>
 
