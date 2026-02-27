@@ -18,18 +18,30 @@ const optionalText = z
 export const lockApplicationStep1Schema = z.object({
   // 申请人姓名
   applicantName: z.string().min(1, "申请人姓名不能为空"),
-  
+
   // 申请人工号
   applicantNo: z.string().min(1, "申请人工号不能为空"),
-  
+
   // 部门
   department: z.string().min(1, "部门不能为空"),
-  
+
   // 联系电话
   phone: z.string().min(1, "联系电话不能为空").regex(/^1[3-9]\d{9}$/, "请输入有效的手机号码"),
-  
+
   // 申请单位
   applyUnit: z.string().min(1, "申请单位不能为空"),
+
+  // 组长/主管
+  leaderName: z.string().optional(),
+  leaderNo: z.string().optional(),
+
+  // 部门长
+  managerName: z.string().optional(),
+  managerNo: z.string().optional(),
+
+  // 安环部审批人
+  safetyOfficerName: z.string().optional(),
+  safetyOfficerNo: z.string().optional(),
 });
 
 // ============================================
@@ -66,7 +78,19 @@ export const lockApplicationSubmitSchema = z.object({
   department: z.string().min(1, "部门不能为空"),
   phone: z.string().min(1, "联系电话不能为空").regex(/^1[3-9]\d{9}$/, "请输入有效的手机号码"),
   applyUnit: z.string().min(1, "申请单位不能为空"),
-  
+
+  // 组长/主管
+  leaderName: z.string().optional(),
+  leaderNo: z.string().optional(),
+
+  // 部门长
+  managerName: z.string().optional(),
+  managerNo: z.string().optional(),
+
+  // 安环部审批人
+  safetyOfficerName: z.string().optional(),
+  safetyOfficerNo: z.string().optional(),
+
   // Step 2 data - lock details array
   lockDetails: z.array(lockApplicationStep2Schema).min(1, "至少添加一种锁具"),
 });

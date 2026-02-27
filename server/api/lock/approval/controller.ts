@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { z } from "zod";
-import { submitApproval, getPendingApprovals, getApprovalHistory } from "./services";
+import { submitApproval, getPendingApprovals, getApprovalHistory, verifyApprovalPermission } from "./services";
 
 // Submit approval schema
 const approvalSchema = z.object({
@@ -45,14 +45,27 @@ export const submitApprovalController = async (c: Context) => {
 
     // Get user from context (would be set by auth middleware)
     const user = c.get("user") || { name: "Unknown", employeeId: "UNKNOWN" };
+    const userNo = user.employeeId || "UNKNOWN";
+
+    // Check permission based on approval level
+    if (validated.approvalLevel < 4) {
+      const permissionCheck = await verifyApprovalPermission(
+        validated.applicationId,
+        validated.approvalLevel,
+        userNo
+      );
+      if (!permissionCheck.hasPermission) {
+        return c.json({ success: false, message: permissionCheck.message }, 403);
+      }
+    }
 
     const approvalRecord = {
       applicationId: validated.applicationId,
       approvalLevel: validated.approvalLevel,
       status: validated.status,
       comment: validated.comment || null,
-      approver: user.name || "Unknown",
-      approverNo: user.employeeId || "UNKNOWN",
+      approver: user.nickname || user.name || "Unknown",
+      approverNo: userNo,
       approvalTime: getCurrentTimeString(),
       createTime: getCurrentTimeString(),
     };
@@ -71,7 +84,22 @@ export const submitApprovalController = async (c: Context) => {
 export const getPendingApprovalsController = async (c: Context) => {
   try {
     const params = querySchema.parse(c.req.query());
-    const result = await getPendingApprovals(params);
+
+    // Get user from context - check if user is authenticated
+    const user = c.get("user");
+    const userNo = user?.employeeId;
+
+    // Check if user has LOCK_REGISTRATION permission (for level 4)
+    const userPermissions = user?.permissions || [];
+    const hasRegistrationPermission = userPermissions.includes("LOCK_REGISTRATION");
+
+    // 不传递默认 level，让后端根据用户工号自动确定审批级别
+    // 如果传了 level 参数，则使用指定的级别（用于管理后台查看特定级别）
+    const result = await getPendingApprovals({
+      level: params.level, // 只有显式传递时才生效
+      userNo: userNo || undefined,
+      hasRegistrationPermission,
+    });
     return c.json({ success: true, data: result });
   } catch (error) {
     if (error instanceof z.ZodError) {

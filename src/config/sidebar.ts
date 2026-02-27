@@ -111,8 +111,22 @@ export const menuItems: MenuItem[] = [
                 url: "/lockApplication",
             },
             {
+                title: "我的申请",
+                url: "/lockMyApplication",
+            },
+            {
                 title: "锁具审批",
                 url: "/lockApproval",
+            },
+            {
+                title: "所有申请单",
+                url: "/lockAllApplication",
+                require: "LOCK_VIEW_ALL",
+            },
+            {
+                title: "锁具库存",
+                url: "/lockInventory",
+                require: "LOCK_VIEW_ALL",
             },
         ],
     },

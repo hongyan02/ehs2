@@ -19,11 +19,12 @@ export async function submitExamResult(
 
   // Update application status
   const newStatus = passed ? "exam_passed" : "rejected";
-    
+
   await db
     .update(lockApplication)
     .set({
       status: newStatus,
+      ...(passed && { currentApprovalLevel: 4 }),
       updateTime: exam.createTime,
     })
     .where(eq(lockApplication.id, exam.applicationId));

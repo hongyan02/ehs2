@@ -30,15 +30,15 @@ interface PendingApprovalTableProps {
 }
 
 const STATUS_MAP: Record<string, string> = {
-  submitted: "待组长审批",
-  approval_l1: "组长审批中",
-  approval_l2: "部门长审批中",
-  approval_l3: "安环部审批中",
-  exam_eligible: "可参加考试",
-  exam_passed: "考试通过",
-  registration: "登记表审批中",
-  registered: "已登记入库",
-  rejected: "已驳回",
+  submitted: "待组长审批",        // 等待组长审批
+  approval_l1: "待部门长审批",    // 组长已通过，等待部门长审批
+  approval_l2: "待安环部审批",    // 部门长已通过，等待安环部审批
+  approval_l3: "待考试",          // 安环部已通过，等待考试
+  exam_eligible: "待考试",        // 可以参加考试
+  exam_passed: "待登记审批",      // 考试通过，等待登记审批
+  registration: "待登记审批",     // 等待登记审批
+  registered: "已登记入库",       // 已完成
+  rejected: "已驳回",             // 已驳回
 };
 
 export default function PendingApprovalTable({

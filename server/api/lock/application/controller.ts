@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { z } from "zod";
-import { getLockApplications, getLockApplicationById, createLockApplication, updateLockApplication } from "./services";
+import { getLockApplications, getLockApplicationById, createLockApplication, updateLockApplication, getMyApplications, getAllApplications, getAllLockDetails, getApplicationsByEmployeeNo } from "./services";
 
 // Query schema
 const querySchema = z.object({
@@ -22,6 +22,15 @@ const createSchema = z.object({
   department: z.string().min(1, "部门不能为空"),
   phone: z.string().min(1, "联系电话不能为空"),
   applyUnit: z.string().min(1, "申请单位不能为空"),
+  // 组长/主管
+  leaderName: z.string().optional(),
+  leaderNo: z.string().optional(),
+  // 部门长
+  managerName: z.string().optional(),
+  managerNo: z.string().optional(),
+  // 安环部审批人
+  safetyOfficerName: z.string().optional(),
+  safetyOfficerNo: z.string().optional(),
   lockDetails: z.array(
     z.object({
       lockType: z.string().min(1, "锁具类型不能为空"),
@@ -108,6 +117,12 @@ export const createApplicationController = async (c: Context) => {
       department: validated.department,
       phone: validated.phone,
       applyUnit: validated.applyUnit,
+      leaderName: validated.leaderName || undefined,
+      leaderNo: validated.leaderNo || undefined,
+      managerName: validated.managerName || undefined,
+      managerNo: validated.managerNo || undefined,
+      safetyOfficerName: validated.safetyOfficerName || undefined,
+      safetyOfficerNo: validated.safetyOfficerNo || undefined,
       status: "submitted",
       currentApprovalLevel: 1,
       applicationTime: currentTime,
@@ -149,6 +164,72 @@ export const updateApplicationController = async (c: Context) => {
       return c.json({ success: false, message: error.issues }, 400);
     }
     console.error("updateApplicationController error:", error);
+    return c.json({ success: false, message: "服务器错误" }, 500);
+  }
+};
+
+// Get my applications (by applicantNo)
+export const getMyApplicationsController = async (c: Context) => {
+  try {
+    const user = c.get("user");
+    if (!user) {
+      return c.json({ success: false, message: "未登录" }, 401);
+    }
+
+    const params = querySchema.parse(c.req.query());
+    const result = await getMyApplications(user.employeeId, params);
+    return c.json({ success: true, data: result });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ success: false, message: error.issues }, 400);
+    }
+    console.error("getMyApplicationsController error:", error);
+    return c.json({ success: false, message: "服务器错误" }, 500);
+  }
+};
+
+// Get all applications (with details) - requires permission
+export const getAllApplicationsController = async (c: Context) => {
+  try {
+    const params = querySchema.parse(c.req.query());
+    const result = await getAllApplications(params);
+    return c.json({ success: true, data: result });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ success: false, message: error.issues }, 400);
+    }
+    console.error("getAllApplicationsController error:", error);
+    return c.json({ success: false, message: "服务器错误" }, 500);
+  }
+};
+
+// Get all lock details with holder info
+export const getAllLockDetailsController = async (c: Context) => {
+  try {
+    const params = querySchema.parse(c.req.query());
+    const result = await getAllLockDetails(params);
+    return c.json({ success: true, data: result });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ success: false, message: error.issues }, 400);
+    }
+    console.error("getAllLockDetailsController error:", error);
+    return c.json({ success: false, message: "服务器错误" }, 500);
+  }
+};
+
+// Query applications by employee number (public - no auth required)
+export const queryByEmployeeNoController = async (c: Context) => {
+  try {
+    const employeeNo = c.req.param("employeeNo");
+    if (!employeeNo) {
+      return c.json({ success: false, message: "工号不能为空" }, 400);
+    }
+
+    const result = await getApplicationsByEmployeeNo(employeeNo);
+    return c.json({ success: true, data: result });
+  } catch (error) {
+    console.error("queryByEmployeeNoController error:", error);
     return c.json({ success: false, message: "服务器错误" }, 500);
   }
 };

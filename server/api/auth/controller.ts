@@ -34,6 +34,7 @@ export const loginController = async (c: Context) => {
         const payload = {
             employeeId: employeeId,
             username: username,
+            nickName: user.nickName || null, // 昵称
             permissions: permissions,
             exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 24 hours
         };

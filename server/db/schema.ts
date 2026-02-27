@@ -420,38 +420,50 @@ export const webhookConfig = sqliteTable("webhook_config", {
 export const lockApplication = sqliteTable("lock_application", {
   // 主键
   id: integer("id").primaryKey({ autoIncrement: true }),
-  
+
   // 申请单号
   applicationCode: text("application_code").notNull().unique(),
-  
+
   // 申请人姓名
   applicantName: text("applicant_name").notNull(),
-  
+
   // 申请人工号
   applicantNo: text("applicant_no").notNull(),
-  
+
   // 部门
   department: text("department").notNull(),
-  
+
   // 联系电话
   phone: text("phone").notNull(),
-  
+
   // 申请单位
   applyUnit: text("apply_unit").notNull(),
-  
+
+  // 组长/主管
+  leaderName: text("leader_name"),
+  leaderNo: text("leader_no"),
+
+  // 部门长
+  managerName: text("manager_name"),
+  managerNo: text("manager_no"),
+
+  // 安环部审批人
+  safetyOfficerName: text("safety_officer_name"),
+  safetyOfficerNo: text("safety_officer_no"),
+
   // 状态
   status: text("status").notNull().default("submitted"),
   // draft/submitted/approval_l1/approval_l2/approval_l3/exam_eligible/exam_passed/registration/registered/rejected
-  
+
   // 当前审批级别
   currentApprovalLevel: integer("current_approval_level").default(1),
-  
+
   // 申请时间
   applicationTime: text("application_time").notNull(),
-  
+
   // 创建时间
   createTime: text("create_time").notNull(),
-  
+
   // 更新时间
   updateTime: text("update_time").notNull(),
 });

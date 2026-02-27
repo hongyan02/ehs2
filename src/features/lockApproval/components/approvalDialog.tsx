@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useApprovalHistory } from "../query/api";
 
 interface LockApplication {
   id: number;
@@ -30,6 +31,18 @@ interface LockApplication {
     quantity: number;
     purpose: string | null;
   }>;
+}
+
+interface ApprovalHistory {
+  id: number;
+  applicationId: number;
+  approvalLevel: number;
+  status: string;
+  approver: string;
+  approverNo: string;
+  comment: string | null;
+  approvalTime: string;
+  createTime: string;
 }
 
 interface ApprovalDialogProps {
@@ -69,6 +82,12 @@ export default function ApprovalDialog({
   isActionPending,
 }: ApprovalDialogProps) {
   const [comment, setComment] = useState("");
+
+  const { data: historyData, isLoading: historyLoading } = useApprovalHistory(
+    application?.id || 0
+  );
+
+  const approvalHistory: ApprovalHistory[] = historyData?.data || [];
 
   if (!application) return null;
 
@@ -149,6 +168,42 @@ export default function ApprovalDialog({
               </div>
             </div>
           )}
+
+          {/* Approval History */}
+          {historyLoading ? (
+            <div className="text-center py-2 text-gray-500">加载审批历史...</div>
+          ) : approvalHistory.length > 0 ? (
+            <div className="border rounded-lg p-4">
+              <h3 className="font-semibold mb-2">审批记录</h3>
+              <div className="space-y-2">
+                {approvalHistory.map((record, idx) => (
+                  <div key={idx} className="text-sm bg-gray-50 p-3 rounded">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-medium">
+                        {LEVEL_NAMES[record.approvalLevel] || `第${record.approvalLevel}级`}
+                      </span>
+                      <span className={record.status === "approve" ? "text-green-600" : "text-red-600"}>
+                        {record.status === "approve" ? "通过" : "驳回"}
+                      </span>
+                    </div>
+                    <div className="text-gray-500 text-xs">
+                      审批人: {record.approver} ({record.approverNo})
+                    </div>
+                    {record.approvalTime && (
+                      <div className="text-gray-500 text-xs">
+                        时间: {record.approvalTime}
+                      </div>
+                    )}
+                    {record.comment && (
+                      <div className="mt-1 text-gray-700">
+                        意见: {record.comment}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {/* Approval Comment */}
           <div className="space-y-2">

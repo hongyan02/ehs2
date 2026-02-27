@@ -6,6 +6,7 @@ type AuthVariables = {
     user: {
         employeeId: string;
         name: string;
+        nickname: string;
         permissions: string[];
     };
 };
@@ -29,9 +30,13 @@ export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(
                 "";
             const name =
                 (payload.name as string | undefined) ??
-                (payload.nickName as string | undefined) ??
                 (payload.username as string | undefined) ??
                 employeeId;
+            const nickname =
+                (payload.nickName as string | undefined) ??
+                (payload.name as string | undefined) ??
+                (payload.username as string | undefined) ??
+                name;
 
             if (!employeeId) {
                 return c.json({ error: "Unauthorized: Invalid token payload" }, 401);
@@ -40,6 +45,7 @@ export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(
             c.set("user", {
                 employeeId,
                 name,
+                nickname,
                 permissions: (payload.permissions as string[]) || [],
             });
 

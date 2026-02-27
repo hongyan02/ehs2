@@ -28,6 +28,41 @@ export async function getLockApplications(params?: {
   return response.data;
 }
 
+// Get my applications
+export async function getMyApplications(params?: {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+}) {
+  const response = await lockApi.get("/lock/application/my", { params });
+  return response.data;
+}
+
+// Get all applications (requires permission)
+export async function getAllApplications(params?: {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+}) {
+  const response = await lockApi.get("/lock/application/all", { params });
+  return response.data;
+}
+
+// Get all lock details with holder info
+export async function getAllLockDetails(params?: {
+  page?: number;
+  pageSize?: number;
+}) {
+  const response = await lockApi.get("/lock/application/locks", { params });
+  return response.data;
+}
+
+// Query applications by employee number (public)
+export async function queryApplicationsByEmployeeNo(employeeNo: string) {
+  const response = await lockApi.get(`/lock/application/query/${employeeNo}`);
+  return response.data;
+}
+
 // Exam Result API
 export async function submitExamResult(data: ExamResult) {
   const response = await lockApi.post("/lock/exam/result", data);
@@ -72,6 +107,46 @@ export function useLockApplications(params?: {
   return useQuery({
     queryKey: ["lockApplications", params],
     queryFn: () => getLockApplications(params),
+  });
+}
+
+export function useMyApplications(params?: {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+}) {
+  return useQuery({
+    queryKey: ["myLockApplications", params],
+    queryFn: () => getMyApplications(params),
+  });
+}
+
+export function useAllApplications(params?: {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+}) {
+  return useQuery({
+    queryKey: ["allLockApplications", params],
+    queryFn: () => getAllApplications(params),
+  });
+}
+
+export function useAllLockDetails(params?: {
+  page?: number;
+  pageSize?: number;
+}) {
+  return useQuery({
+    queryKey: ["allLockDetails", params],
+    queryFn: () => getAllLockDetails(params),
+  });
+}
+
+export function useQueryByEmployeeNo(employeeNo: string) {
+  return useQuery({
+    queryKey: ["queryByEmployeeNo", employeeNo],
+    queryFn: () => queryApplicationsByEmployeeNo(employeeNo),
+    enabled: !!employeeNo,
   });
 }
 
