@@ -2,7 +2,19 @@ import { db } from "../../../db/db";
 import { lockApplication, lockApproval } from "../../../db/schema";
 import { eq, desc } from "drizzle-orm";
 
-// Status mapping
+// Linear approval flow mapping:
+// Level 1 (组长/主管): status = "submitted" 
+// Level 2 (部门长): status = "approval_l1"
+// Level 3 (安环部): status = "approval_l2"  
+// Level 4 (登记审批): status = "exam_passed" -> registration
+
+const APPROVAL_LEVEL_STATUS: Record<number, string> = {
+  1: "submitted",
+  2: "approval_l1",
+  3: "approval_l2",
+  4: "exam_passed",
+};
+
 const STATUS_MAP: Record<number, string> = {
   1: "approval_l1",
   2: "approval_l2",
@@ -24,10 +36,8 @@ export async function submitApproval(
   level: number,
   action: "approve" | "reject"
 ) {
-  // Insert approval record
   const [approvalRecord] = await db.insert(lockApproval).values(approval).returning();
 
-  // Update application status
   let newStatus: string;
   let newLevel: number;
 
@@ -35,13 +45,11 @@ export async function submitApproval(
     newStatus = "rejected";
     newLevel = level;
   } else {
-    // Move to next level
     if (level < 4) {
       newStatus = STATUS_MAP[level + 1];
       newLevel = level + 1;
     } else {
-      // Final approval - goes to registration
-      newStatus = "registration";
+      newStatus = "registered";
       newLevel = 5;
     }
   }
@@ -67,13 +75,13 @@ export async function getPendingApprovals(params?: {
   const pageSize = params?.pageSize || 10;
   const offset = (page - 1) * pageSize;
 
-  // Get applications where currentApprovalLevel matches the query (or defaults to level 1)
   const targetLevel = params?.level || 1;
+  const targetStatus = APPROVAL_LEVEL_STATUS[targetLevel] || "submitted";
   
   const applications = await db
     .select()
     .from(lockApplication)
-    .where(eq(lockApplication.currentApprovalLevel, targetLevel))
+    .where(eq(lockApplication.status, targetStatus))
     .orderBy(desc(lockApplication.id))
     .limit(pageSize)
     .offset(offset);
