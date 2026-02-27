@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { anonymousAccessMiddleware } from "../../../middleware/anonymous";
 import {
   getApplicationsController,
   getApplicationByIdController,
@@ -8,9 +9,12 @@ import {
 
 const route = new Hono();
 
+// Public endpoint - anonymous access with rate limiting
+route.post("/", anonymousAccessMiddleware, createApplicationController);
+
+// Protected endpoints - require authentication
 route.get("/", getApplicationsController);
 route.get("/:id", getApplicationByIdController);
-route.post("/", createApplicationController);
 route.patch("/:id", updateApplicationController);
 
 export default route;

@@ -20,7 +20,10 @@ const PUBLIC_PATHS = [
   "/api/wxWork",
   "/api/point/ranking",
   "/api/point/kpi",
-  "/api/point/logs"
+  "/api/point/logs",
+  // Lock application - anonymous access
+  "/api/lock/application",
+  "/lockApplication",
 ];
 
 /**
