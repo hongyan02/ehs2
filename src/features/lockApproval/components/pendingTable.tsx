@@ -46,6 +46,8 @@ export default function PendingApprovalTable({
   onView,
   selectedId,
 }: PendingApprovalTableProps) {
+  const isEmpty = !data || !Array.isArray(data) || data.length === 0;
+
   return (
     <Table>
       <TableHeader>
@@ -60,7 +62,7 @@ export default function PendingApprovalTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data.length === 0 ? (
+        {isEmpty ? (
           <TableRow>
             <TableCell colSpan={7} className="text-center py-8">
               暂无待审批申请
