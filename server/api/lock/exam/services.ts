@@ -14,23 +14,21 @@ export async function submitExamResult(
   },
   passed: boolean
 ) {
-  return await db.transaction(async (tx) => {
-    // Insert exam result
-    const [result] = await tx.insert(examResult).values(exam).returning();
+  // Insert exam result
+  const [result] = await db.insert(examResult).values(exam).returning();
 
-    // Update application status
-    const newStatus = passed ? "exam_passed" : "rejected";
+  // Update application status
+  const newStatus = passed ? "exam_passed" : "rejected";
     
-    await tx
-      .update(lockApplication)
-      .set({
-        status: newStatus,
-        updateTime: exam.createTime,
-      })
-      .where(eq(lockApplication.id, exam.applicationId));
+  await db
+    .update(lockApplication)
+    .set({
+      status: newStatus,
+      updateTime: exam.createTime,
+    })
+    .where(eq(lockApplication.id, exam.applicationId));
 
-    return result;
-  });
+  return result;
 }
 
 export async function getExamResult(applicationId: number) {

@@ -10,16 +10,6 @@ const STATUS_MAP: Record<number, string> = {
   4: "registration",
 };
 
-const APPROVAL_LEVEL_MAP: Record<string, number> = {
-  submitted: 1,
-  approval_l1: 2,
-  approval_l2: 3,
-  approval_l3: 4,
-  exam_eligible: 4,
-  registration: 5,
-  registered: 5,
-};
-
 export async function submitApproval(
   approval: {
     applicationId: number;
@@ -34,40 +24,38 @@ export async function submitApproval(
   level: number,
   action: "approve" | "reject"
 ) {
-  return await db.transaction(async (tx) => {
-    // Insert approval record
-    const [approvalRecord] = await tx.insert(lockApproval).values(approval).returning();
+  // Insert approval record
+  const [approvalRecord] = await db.insert(lockApproval).values(approval).returning();
 
-    // Update application status
-    let newStatus: string;
-    let newLevel: number;
+  // Update application status
+  let newStatus: string;
+  let newLevel: number;
 
-    if (action === "reject") {
-      newStatus = "rejected";
-      newLevel = level;
+  if (action === "reject") {
+    newStatus = "rejected";
+    newLevel = level;
+  } else {
+    // Move to next level
+    if (level < 4) {
+      newStatus = STATUS_MAP[level + 1];
+      newLevel = level + 1;
     } else {
-      // Move to next level
-      if (level < 4) {
-        newStatus = STATUS_MAP[level + 1];
-        newLevel = level + 1;
-      } else {
-        // Final approval - goes to registration
-        newStatus = "registration";
-        newLevel = 5;
-      }
+      // Final approval - goes to registration
+      newStatus = "registration";
+      newLevel = 5;
     }
+  }
 
-    await tx
-      .update(lockApplication)
-      .set({
-        status: newStatus,
-        currentApprovalLevel: newLevel,
-        updateTime: approval.createTime,
-      })
-      .where(eq(lockApplication.id, approval.applicationId));
+  await db
+    .update(lockApplication)
+    .set({
+      status: newStatus,
+      currentApprovalLevel: newLevel,
+      updateTime: approval.createTime,
+    })
+    .where(eq(lockApplication.id, approval.applicationId));
 
-    return approvalRecord;
-  });
+  return approvalRecord;
 }
 
 export async function getPendingApprovals(params?: {

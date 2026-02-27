@@ -74,25 +74,21 @@ export async function createLockApplication(
     purpose?: string;
   }[]
 ) {
-  const result = await db.transaction(async (tx) => {
-    // Insert application
-    const [app] = await tx.insert(lockApplication).values(application).returning();
-    
-    // Insert details
-    const detailRecords = details.map((d) => ({
-      applicationCode: application.applicationCode,
-      lockType: d.lockType,
-      specification: d.specification || null,
-      quantity: d.quantity,
-      purpose: d.purpose || null,
-    }));
-    
-    await tx.insert(lockApplicationDetail).values(detailRecords);
-    
-    return app;
-  });
-
-  return result;
+  // First insert application
+  const [app] = await db.insert(lockApplication).values(application).returning();
+  
+  // Then insert details
+  const detailRecords = details.map((d) => ({
+    applicationCode: application.applicationCode,
+    lockType: d.lockType,
+    specification: d.specification || null,
+    quantity: d.quantity,
+    purpose: d.purpose || null,
+  }));
+  
+  await db.insert(lockApplicationDetail).values(detailRecords);
+  
+  return app;
 }
 
 export async function updateLockApplication(data: {
