@@ -15,6 +15,7 @@ import pointRoute from "./point/route";
 import webhookRoute from "./webhook/route";
 import { customLogger } from "../middleware/logger";
 import wxWorkDutyLogRoute from "./wxWork/dutyLog/route";
+import lockApplicationRoute from "./lock/application/route";
 
 const app = new Hono().basePath("/api");
 
@@ -37,6 +38,7 @@ app.route("/goods/materialLog", materialLogRoute);
 app.route("/system/permissions", permissionsRoute);
 app.route("/point", pointRoute);
 app.route("/wxWork/dutyLog", wxWorkDutyLogRoute);
+app.route("/lock/application", lockApplicationRoute);
 
 export { app };
 
