@@ -1,4 +1,4 @@
-import { Home, Calendar, Trophy, Warehouse, User2, Settings } from "lucide-react";
+import { Home, Calendar, Trophy, Warehouse, User2, Settings, Lock } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
 export interface MenuItem {
@@ -44,7 +44,6 @@ export const menuItems: MenuItem[] = [
                 url: "/points/management",
                 require: "POINT",
             },
-
             {
                 title: "积分排名",
                 url: "/points/rank",
@@ -103,6 +102,20 @@ export const menuItems: MenuItem[] = [
             },
         ],
     },
+    {
+        title: "锁具管理",
+        icon: Lock,
+        items: [
+            {
+                title: "锁具申请",
+                url: "/lockApplication",
+            },
+            {
+                title: "锁具审批",
+                url: "/lockApproval",
+            },
+        ],
+    },
 ];
 
 // 底部菜单配置
@@ -116,5 +129,4 @@ export const footerMenuItem: MenuItem = {
 export const sidebarConfig = {
     appTitle: process.env.NEXT_PUBLIC_APP_TITLE || "EHS 系统",
     appSubtitle: "管理平台",
-    // groupLabel: "导航菜单",
 };
