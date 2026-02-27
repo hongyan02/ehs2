@@ -411,3 +411,142 @@ export const webhookConfig = sqliteTable("webhook_config", {
   //更新时间
   updatedAt: text("updated_at").notNull(), // 格式：YYYY-MM-DD HH:mm:ss
 });
+
+// ============================================
+// Lock Application Tables
+// ============================================
+
+// 锁具申请表
+export const lockApplication = sqliteTable("lock_application", {
+  // 主键
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  
+  // 申请单号
+  applicationCode: text("application_code").notNull().unique(),
+  
+  // 申请人姓名
+  applicantName: text("applicant_name").notNull(),
+  
+  // 申请人工号
+  applicantNo: text("applicant_no").notNull(),
+  
+  // 部门
+  department: text("department").notNull(),
+  
+  // 联系电话
+  phone: text("phone").notNull(),
+  
+  // 申请单位
+  applyUnit: text("apply_unit").notNull(),
+  
+  // 状态
+  status: text("status").notNull().default("submitted"),
+  // draft/submitted/approval_l1/approval_l2/approval_l3/exam_eligible/exam_passed/registration/registered/rejected
+  
+  // 当前审批级别
+  currentApprovalLevel: integer("current_approval_level").default(1),
+  
+  // 申请时间
+  applicationTime: text("application_time").notNull(),
+  
+  // 创建时间
+  createTime: text("create_time").notNull(),
+  
+  // 更新时间
+  updateTime: text("update_time").notNull(),
+});
+
+// 锁具明细表
+export const lockApplicationDetail = sqliteTable("lock_application_detail", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  
+  // 所属申请单号
+  applicationCode: text("application_code").notNull(),
+  
+  // 锁具类型
+  lockType: text("lock_type").notNull(),
+  
+  // 规格型号
+  specification: text("specification"),
+  
+  // 数量
+  quantity: integer("quantity").notNull(),
+  
+  // 用途说明
+  purpose: text("purpose"),
+});
+
+// 审批记录表
+export const lockApproval = sqliteTable("lock_approval", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  
+  // 申请ID
+  applicationId: integer("application_id").notNull(),
+  
+  // 审批级别 (1=组长/主管, 2=部门长, 3=安环部, 4=登记审批)
+  approvalLevel: integer("approval_level").notNull(),
+  
+  // 审批状态
+  status: text("status").notNull(), // pending/approved/rejected
+  
+  // 审批人
+  approver: text("approver"),
+  
+  // 审批人工号
+  approverNo: text("approver_no"),
+  
+  // 审批意见
+  comment: text("comment"),
+  
+  // 审批时间
+  approvalTime: text("approval_time"),
+  
+  // 创建时间
+  createTime: text("create_time").notNull(),
+});
+
+// 考试结果表
+export const examResult = sqliteTable("exam_result", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  
+  // 申请ID
+  applicationId: integer("application_id").notNull(),
+  
+  // 是否通过
+  passed: integer("passed").notNull(), // 0=false, 1=true
+  
+  // 考试分数
+  score: integer("score").notNull(),
+  
+  // 考试日期
+  examDate: text("exam_date").notNull(),
+  
+  // 备注
+  remark: text("remark"),
+  
+  // 录入人
+  enteredBy: text("entered_by"),
+  
+  // 创建时间
+  createTime: text("create_time").notNull(),
+});
+
+// 匿名访问Token表
+export const anonymousToken = sqliteTable("anonymous_token", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  
+  // Token值
+  token: text("token").notNull().unique(),
+  
+  // 关联的申请ID（可选）
+  applicationId: integer("application_id"),
+  
+  // 到期时间
+  expiresAt: text("expires_at"),
+  
+  // 创建时间
+  createTime: text("create_time").notNull(),
+  
+  // 更新时间
+  updateTime: text("update_time").notNull(),
+});
