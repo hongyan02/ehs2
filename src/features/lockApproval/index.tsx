@@ -37,7 +37,7 @@ export default function LockApprovalPage() {
     pageSize,
   });
 
-  const pendingList = data?.data ?? [];
+  const pendingList = data?.data?.data ?? [];
 
   const approvalMutation = useSubmitApproval();
   const { nickname, username } = useInfoStore();
@@ -96,7 +96,7 @@ export default function LockApprovalPage() {
             <CustomPagination
               page={page}
               pageSize={pageSize}
-              total={data?.total || 0}
+              total={data?.data?.total || 0}
               onChange={(nextPage) => {
                 setPage(nextPage);
                 setSelectedId(null);
