@@ -21,7 +21,14 @@ const createSchema = z.object({
   applicantNo: z.string().min(1, "申请人工号不能为空"),
   department: z.string().min(1, "部门不能为空"),
   phone: z.string().min(1, "联系电话不能为空"),
-  applyUnit: z.string().min(1, "申请单位不能为空"),
+  // 所属产线
+  productionLine: z.string().optional(),
+  // 工序
+  process: z.string().optional(),
+  // 班组
+  team: z.string().optional(),
+  // 上岗证照片URL
+  certificatePhoto: z.string().optional(),
   // 组长/主管
   leaderName: z.string().optional(),
   leaderNo: z.string().optional(),
@@ -31,14 +38,6 @@ const createSchema = z.object({
   // 安环部审批人
   safetyOfficerName: z.string().optional(),
   safetyOfficerNo: z.string().optional(),
-  lockDetails: z.array(
-    z.object({
-      lockType: z.string().min(1, "锁具类型不能为空"),
-      specification: z.string().optional(),
-      quantity: z.number().min(1, "数量至少为1"),
-      purpose: z.string().optional(),
-    })
-  ).min(1, "至少添加一种锁具"),
 });
 
 // Update schema
@@ -116,7 +115,10 @@ export const createApplicationController = async (c: Context) => {
       applicantNo: validated.applicantNo,
       department: validated.department,
       phone: validated.phone,
-      applyUnit: validated.applyUnit,
+      productionLine: validated.productionLine || null,
+      process: validated.process || null,
+      team: validated.team || null,
+      certificatePhoto: validated.certificatePhoto || null,
       leaderName: validated.leaderName || undefined,
       leaderNo: validated.leaderNo || undefined,
       managerName: validated.managerName || undefined,
@@ -130,7 +132,7 @@ export const createApplicationController = async (c: Context) => {
       updateTime: currentTime,
     };
 
-    const result = await createLockApplication(payload, validated.lockDetails);
+    const result = await createLockApplication(payload);
     return c.json({ success: true, data: result }, 201);
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -67,6 +67,7 @@ export default function LockApprovalPage() {
         applicationId: viewApplication.id,
         status,
         approvalLevel: viewApplication.currentApprovalLevel,
+        approverName: nickname || username,
       });
       toast.success(status === "approve" ? "已同意申请" : "已驳回申请");
       handleDialogChange(false);

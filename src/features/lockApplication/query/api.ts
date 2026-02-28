@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import type { LockApplicationSubmit, ExamResult, Approval } from "@/lib/schemas/lock-application";
+import type { LockApplicationStep1, ExamResult, Approval } from "@/lib/schemas/lock-application";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_CONFIG_LOCAL || "/api";
 
@@ -9,7 +9,7 @@ const lockApi = axios.create({
 });
 
 // Lock Application API
-export async function createLockApplication(data: LockApplicationSubmit) {
+export async function createLockApplication(data: LockApplicationStep1) {
   const response = await lockApi.post("/lock/application", data);
   return response.data;
 }
@@ -174,4 +174,4 @@ export function usePendingApprovals(params?: {
 }
 
 // Type exports for frontend use
-export type { LockApplicationSubmit, ExamResult, Approval };
+export type { LockApplicationStep1, ExamResult, Approval };

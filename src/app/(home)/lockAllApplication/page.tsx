@@ -35,7 +35,10 @@ interface Application {
   applicantNo: string;
   department: string;
   phone: string;
-  applyUnit: string;
+  productionLine?: string | null;
+  process?: string | null;
+  team?: string | null;
+  certificatePhoto?: string | null;
   status: string;
   currentApprovalLevel: number;
   applicationTime: string;
@@ -130,8 +133,8 @@ export default function LockAllApplicationPage() {
               <TableRow>
                 <TableHead>申请单号</TableHead>
                 <TableHead>申请人</TableHead>
-                <TableHead>申请单位</TableHead>
                 <TableHead>部门</TableHead>
+                <TableHead>产线/工序/班组</TableHead>
                 <TableHead>状态</TableHead>
                 <TableHead>申请时间</TableHead>
                 <TableHead>操作</TableHead>
@@ -149,8 +152,10 @@ export default function LockAllApplicationPage() {
                   <TableRow key={app.id}>
                     <TableCell>{app.applicationCode}</TableCell>
                     <TableCell>{app.applicantName}</TableCell>
-                    <TableCell>{app.applyUnit}</TableCell>
                     <TableCell>{app.department}</TableCell>
+                    <TableCell>
+                      {[app.productionLine, app.process, app.team].filter(Boolean).join(" / ") || "-"}
+                    </TableCell>
                     <TableCell>{getStatusBadge(app.status)}</TableCell>
                     <TableCell>{app.applicationTime}</TableCell>
                     <TableCell>
@@ -204,8 +209,16 @@ export default function LockAllApplicationPage() {
                   <p>{selectedApp.phone}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium">申请单位</label>
-                  <p>{selectedApp.applyUnit}</p>
+                  <label className="text-sm font-medium">所属产线</label>
+                  <p>{selectedApp.productionLine || "-"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">工序</label>
+                  <p>{selectedApp.process || "-"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">班组</label>
+                  <p>{selectedApp.team || "-"}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium">状态</label>
@@ -216,6 +229,18 @@ export default function LockAllApplicationPage() {
                   <p>{selectedApp.applicationTime}</p>
                 </div>
               </div>
+
+              {/* 上岗证照片 */}
+              {selectedApp.certificatePhoto && (
+                <div className="border-t pt-4">
+                  <h3 className="font-medium mb-2">上岗证照片</h3>
+                  <img
+                    src={selectedApp.certificatePhoto}
+                    alt="上岗证"
+                    className="w-40 h-40 object-cover rounded border"
+                  />
+                </div>
+              )}
 
               {/* 审批人信息 */}
               <div className="border-t pt-4">

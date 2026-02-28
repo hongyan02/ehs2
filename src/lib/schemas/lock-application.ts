@@ -28,8 +28,17 @@ export const lockApplicationStep1Schema = z.object({
   // 联系电话
   phone: z.string().min(1, "联系电话不能为空").regex(/^1[3-9]\d{9}$/, "请输入有效的手机号码"),
 
-  // 申请单位
-  applyUnit: z.string().min(1, "申请单位不能为空"),
+  // 所属产线
+  productionLine: z.string().optional(),
+
+  // 工序
+  process: z.string().optional(),
+
+  // 班组
+  team: z.string().optional(),
+
+  // 上岗证照片URL
+  certificatePhoto: z.string().optional(),
 
   // 组长/主管
   leaderName: z.string().optional(),
@@ -77,7 +86,18 @@ export const lockApplicationSubmitSchema = z.object({
   applicantNo: z.string().min(1, "申请人工号不能为空"),
   department: z.string().min(1, "部门不能为空"),
   phone: z.string().min(1, "联系电话不能为空").regex(/^1[3-9]\d{9}$/, "请输入有效的手机号码"),
-  applyUnit: z.string().min(1, "申请单位不能为空"),
+
+  // 所属产线
+  productionLine: z.string().optional(),
+
+  // 工序
+  process: z.string().optional(),
+
+  // 班组
+  team: z.string().optional(),
+
+  // 上岗证照片URL
+  certificatePhoto: z.string().optional(),
 
   // 组长/主管
   leaderName: z.string().optional(),

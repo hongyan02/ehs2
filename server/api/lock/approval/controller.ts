@@ -8,6 +8,7 @@ const approvalSchema = z.object({
   status: z.enum(["approve", "reject"]),
   comment: z.string().optional(),
   approvalLevel: z.number().min(1).max(4),
+  approverName: z.string().optional(),
 });
 
 // Query schema
@@ -64,7 +65,7 @@ export const submitApprovalController = async (c: Context) => {
       approvalLevel: validated.approvalLevel,
       status: validated.status,
       comment: validated.comment || null,
-      approver: user.nickname || user.name || "Unknown",
+      approver: validated.approverName || user.nickname || user.name || "Unknown",
       approverNo: userNo,
       approvalTime: getCurrentTimeString(),
       createTime: getCurrentTimeString(),

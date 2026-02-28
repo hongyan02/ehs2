@@ -232,7 +232,10 @@ export async function createLockApplication(
     applicantNo: string;
     department: string;
     phone: string;
-    applyUnit: string;
+    productionLine?: string | null;
+    process?: string | null;
+    team?: string | null;
+    certificatePhoto?: string | null;
     leaderName?: string;
     leaderNo?: string;
     managerName?: string;
@@ -244,28 +247,11 @@ export async function createLockApplication(
     applicationTime: string;
     createTime: string;
     updateTime: string;
-  },
-  details: {
-    lockType: string;
-    specification?: string;
-    quantity: number;
-    purpose?: string;
-  }[]
+  }
 ) {
-  // First insert application
+  // Insert application
   const [app] = await db.insert(lockApplication).values(application).returning();
-  
-  // Then insert details
-  const detailRecords = details.map((d) => ({
-    applicationCode: application.applicationCode,
-    lockType: d.lockType,
-    specification: d.specification || null,
-    quantity: d.quantity,
-    purpose: d.purpose || null,
-  }));
-  
-  await db.insert(lockApplicationDetail).values(detailRecords);
-  
+
   return app;
 }
 

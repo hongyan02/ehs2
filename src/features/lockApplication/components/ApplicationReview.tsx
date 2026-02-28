@@ -1,11 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import type { LockApplicationStep1, LockApplicationStep2 } from "@/lib/schemas/lock-application";
+import type { LockApplicationStep1 } from "@/lib/schemas/lock-application";
 
 interface ApplicationReviewProps {
   step1Data: LockApplicationStep1;
-  step2Data: LockApplicationStep2[];
   onSubmit: () => void;
   onPrev: () => void;
   isSubmitting?: boolean;
@@ -13,7 +12,6 @@ interface ApplicationReviewProps {
 
 export default function ApplicationReview({
   step1Data,
-  step2Data,
   onSubmit,
   onPrev,
   isSubmitting,
@@ -40,38 +38,34 @@ export default function ApplicationReview({
             <span>{step1Data.phone}</span>
           </div>
           <div>
-            <span className="text-gray-500">申请单位：</span>
-            <span>{step1Data.applyUnit}</span>
+            <span className="text-gray-500">所属产线：</span>
+            <span>{step1Data.productionLine || "-"}</span>
+          </div>
+          <div>
+            <span className="text-gray-500">工序：</span>
+            <span>{step1Data.process || "-"}</span>
+          </div>
+          <div>
+            <span className="text-gray-500">班组：</span>
+            <span>{step1Data.team || "-"}</span>
+          </div>
+          <div>
+            <span className="text-gray-500">组长/主管：</span>
+            <span>{step1Data.leaderName || "-"}</span>
           </div>
         </div>
-      </div>
-
-      <div className="border rounded-lg p-6 space-y-4">
-        <h3 className="text-lg font-semibold">锁具明细</h3>
-        <div className="space-y-4">
-          {step2Data.map((lock, index) => (
-            <div key={index} className="border-b pb-4 last:border-b-0">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-gray-500">锁具类型：</span>
-                  <span>{lock.lockType}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">规格型号：</span>
-                  <span>{lock.specification || "-"}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">数量：</span>
-                  <span>{lock.quantity}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">用途说明：</span>
-                  <span>{lock.purpose || "-"}</span>
-                </div>
-              </div>
+        {step1Data.certificatePhoto && (
+          <div className="mt-4">
+            <span className="text-gray-500">上岗证照片：</span>
+            <div className="mt-2">
+              <img
+                src={step1Data.certificatePhoto}
+                alt="上岗证"
+                className="w-32 h-32 object-cover rounded border"
+              />
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="flex justify-between">

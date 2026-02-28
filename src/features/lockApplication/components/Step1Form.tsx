@@ -9,7 +9,11 @@ import { AutoComplete, type Option } from "@/components/autoCompleteSelect";
 import useUserListStore from "@/stores/useUserList";
 import type { LockApplicationStep1 } from "@/lib/schemas/lock-application";
 import { lockApplicationStep1Schema } from "@/lib/schemas/lock-application";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import axios from "axios";
+import { Upload, X } from "lucide-react";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_CONFIG_LOCAL || "/api";
 
 interface Step1FormProps {
   onNext: (data: LockApplicationStep1) => void;
@@ -69,6 +73,7 @@ function ApproverSelect({
 
 export default function Step1Form({ onNext, defaultValues }: Step1FormProps) {
   const userOptions = useUserOptions();
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     register,
@@ -84,7 +89,10 @@ export default function Step1Form({ onNext, defaultValues }: Step1FormProps) {
       applicantNo: "",
       department: "",
       phone: "",
-      applyUnit: "",
+      productionLine: "",
+      process: "",
+      team: "",
+      certificatePhoto: "",
       leaderName: "",
       leaderNo: "",
       managerName: "",
@@ -93,6 +101,55 @@ export default function Step1Form({ onNext, defaultValues }: Step1FormProps) {
       safetyOfficerNo: "",
     },
   });
+
+  const watchCertificatePhoto = watch("certificatePhoto");
+
+  // 处理文件上传
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 验证文件类型
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      alert("只支持 JPG、PNG、GIF、WebP 格式的图片");
+      return;
+    }
+
+    // 验证文件大小 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("图片大小不能超过 5MB");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axios.post(`${API_BASE}/upload/certificate`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.data.success) {
+        setValue("certificatePhoto", response.data.data.url, { shouldValidate: true });
+      } else {
+        alert(response.data.message || "上传失败");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("上传失败，请重试");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // 删除已上传的照片
+  const handleRemovePhoto = () => {
+    setValue("certificatePhoto", "");
+  };
 
   const onSubmit = (data: LockApplicationStep1) => {
     onNext(data);
@@ -173,16 +230,72 @@ export default function Step1Form({ onNext, defaultValues }: Step1FormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="applyUnit">
-          申请单位 <span className="text-red-500">*</span>
-        </Label>
+        <Label htmlFor="productionLine">所属产线</Label>
         <Input
-          id="applyUnit"
-          placeholder="请输入申请单位"
-          {...register("applyUnit")}
+          id="productionLine"
+          placeholder="请输入所属产线"
+          {...register("productionLine")}
         />
-        {errors.applyUnit && (
-          <p className="text-sm text-red-500">{errors.applyUnit.message}</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="process">工序</Label>
+        <Input
+          id="process"
+          placeholder="请输入工序"
+          {...register("process")}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="team">班组</Label>
+        <Input
+          id="team"
+          placeholder="请输入班组"
+          {...register("team")}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="certificatePhoto">上岗证照片</Label>
+        {watchCertificatePhoto ? (
+          <div className="relative inline-block">
+            <img
+              src={watchCertificatePhoto}
+              alt="上岗证"
+              className="w-32 h-32 object-cover rounded border"
+            />
+            <button
+              type="button"
+              onClick={handleRemovePhoto}
+              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <div className="flex items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors">
+                {isUploading ? (
+                  <span className="text-sm text-gray-500">上传中...</span>
+                ) : (
+                  <div className="text-center">
+                    <Upload className="w-8 h-8 mx-auto text-gray-400" />
+                    <span className="text-xs text-gray-500">点击上传</span>
+                  </div>
+                )}
+              </div>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={handleFileChange}
+                className="hidden"
+                disabled={isUploading}
+              />
+            </label>
+            <span className="text-xs text-gray-500">支持 JPG、PNG、GIF、WebP，不超过 5MB</span>
+          </div>
         )}
       </div>
 

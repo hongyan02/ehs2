@@ -21,6 +21,7 @@ export async function submitApproval(data: {
   status: "approve" | "reject";
   comment?: string;
   approvalLevel: number;
+  approverName?: string;
 }) {
   const response = await lockApi.post("/lock/approval", data);
   return response.data;

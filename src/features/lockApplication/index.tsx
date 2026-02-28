@@ -3,27 +3,20 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import Step1Form from "./components/Step1Form";
-import Step2Form from "./components/Step2Form";
 import ApplicationReview from "./components/ApplicationReview";
 import { useCreateLockApplication } from "./query/api";
-import type { LockApplicationStep1, LockApplicationStep2 } from "@/lib/schemas/lock-application";
+import type { LockApplicationStep1 } from "@/lib/schemas/lock-application";
 
-type Step = "step1" | "step2" | "review";
+type Step = "step1" | "review";
 
 export default function LockApplicationPage() {
   const [currentStep, setCurrentStep] = useState<Step>("step1");
   const [step1Data, setStep1Data] = useState<LockApplicationStep1 | null>(null);
-  const [step2Data, setStep2Data] = useState<LockApplicationStep2[]>([]);
 
   const createMutation = useCreateLockApplication();
 
   const handleStep1Next = (data: LockApplicationStep1) => {
     setStep1Data(data);
-    setCurrentStep("step2");
-  };
-
-  const handleStep2Next = (data: LockApplicationStep2[]) => {
-    setStep2Data(data);
     setCurrentStep("review");
   };
 
@@ -31,15 +24,11 @@ export default function LockApplicationPage() {
     if (!step1Data) return;
 
     try {
-      await createMutation.mutateAsync({
-        ...step1Data,
-        lockDetails: step2Data,
-      });
+      await createMutation.mutateAsync(step1Data);
       toast.success("申请提交成功");
       // Reset form or redirect
       setCurrentStep("step1");
       setStep1Data(null);
-      setStep2Data([]);
     } catch (error) {
       toast.error("申请提交失败，请重试");
     }
@@ -47,8 +36,6 @@ export default function LockApplicationPage() {
 
   const handlePrev = () => {
     if (currentStep === "review") {
-      setCurrentStep("step2");
-    } else if (currentStep === "step2") {
       setCurrentStep("step1");
     }
   };
@@ -72,30 +59,9 @@ export default function LockApplicationPage() {
         <div className="w-16 h-1 bg-gray-200">
           <div
             className={`h-full ${
-              currentStep === "step2" || currentStep === "review"
+              currentStep === "review"
                 ? "bg-blue-500"
                 : "bg-gray-200"
-            }`}
-          />
-        </div>
-        <div className="flex-1 flex items-center">
-          <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              currentStep === "review"
-                ? "bg-green-500"
-                : currentStep === "step2"
-                ? "bg-blue-500"
-                : "bg-gray-300"
-            } text-white`}
-          >
-            2
-          </div>
-          <span className="ml-2">锁具明细</span>
-        </div>
-        <div className="w-16 h-1 bg-gray-200">
-          <div
-            className={`h-full ${
-              currentStep === "review" ? "bg-blue-500" : "bg-gray-200"
             }`}
           />
         </div>
@@ -105,7 +71,7 @@ export default function LockApplicationPage() {
               currentStep === "review" ? "bg-blue-500" : "bg-gray-300"
             } text-white`}
           >
-            3
+            2
           </div>
           <span className="ml-2">确认提交</span>
         </div>
@@ -119,18 +85,9 @@ export default function LockApplicationPage() {
         />
       )}
 
-      {currentStep === "step2" && (
-        <Step2Form
-          onNext={handleStep2Next}
-          onPrev={handlePrev}
-          defaultValues={step2Data}
-        />
-      )}
-
       {currentStep === "review" && step1Data && (
         <ApplicationReview
           step1Data={step1Data}
-          step2Data={step2Data}
           onSubmit={handleSubmit}
           onPrev={handlePrev}
           isSubmitting={createMutation.isPending}

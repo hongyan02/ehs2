@@ -436,8 +436,17 @@ export const lockApplication = sqliteTable("lock_application", {
   // 联系电话
   phone: text("phone").notNull(),
 
-  // 申请单位
-  applyUnit: text("apply_unit").notNull(),
+  // 所属产线
+  productionLine: text("production_line"),
+
+  // 工序
+  process: text("process"),
+
+  // 班组
+  team: text("team"),
+
+  // 上岗证照片URL
+  certificatePhoto: text("certificate_photo"),
 
   // 组长/主管
   leaderName: text("leader_name"),

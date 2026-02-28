@@ -20,7 +20,10 @@ interface LockApplication {
   applicantNo: string;
   department: string;
   phone: string;
-  applyUnit: string;
+  productionLine?: string | null;
+  process?: string | null;
+  team?: string | null;
+  certificatePhoto?: string | null;
   status: string;
   currentApprovalLevel: number;
   applicationTime: string;
@@ -130,8 +133,16 @@ export default function ApprovalDialog({
                 {application.phone}
               </div>
               <div>
-                <span className="text-gray-500">申请单位：</span>
-                {application.applyUnit}
+                <span className="text-gray-500">所属产线：</span>
+                {application.productionLine || "-"}
+              </div>
+              <div>
+                <span className="text-gray-500">工序：</span>
+                {application.process || "-"}
+              </div>
+              <div>
+                <span className="text-gray-500">班组：</span>
+                {application.team || "-"}
               </div>
               <div>
                 <span className="text-gray-500">状态：</span>
@@ -139,6 +150,18 @@ export default function ApprovalDialog({
               </div>
             </div>
           </div>
+
+          {/* Certificate Photo */}
+          {application.certificatePhoto && (
+            <div className="border rounded-lg p-4">
+              <h3 className="font-semibold mb-2">上岗证照片</h3>
+              <img
+                src={application.certificatePhoto}
+                alt="上岗证"
+                className="w-40 h-40 object-cover rounded border"
+              />
+            </div>
+          )}
 
           {/* Lock Details */}
           {application.lockDetails && application.lockDetails.length > 0 && (
