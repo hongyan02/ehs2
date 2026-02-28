@@ -12,18 +12,44 @@
 ## 本地开发
 
 ```bash
+# 安装依赖
 pnpm install
+
+# 数据库迁移（首次运行或 schema 变更后）
+pnpm db:migrate
+
+# 启动开发服务器
 pnpm dev
 ```
+
+### 常用命令
+
+| 命令 | 说明 |
+|------|------|
+| `pnpm dev` | 启动开发服务器 |
+| `pnpm build` | 构建生产版本 |
+| `pnpm start` | 运行生产版本（端口 802） |
+| `pnpm db:generate` | 生成数据库迁移文件 |
+| `pnpm db:migrate` | 执行数据库迁移 |
+| `pnpm lint` | 代码检查 |
 
 ## 环境变量
 
 - `NEXT_PUBLIC_API_CONFIG_LOCAL`：本地 API Base URL（例如 `http://localhost:3000/api`）
 - `NEXT_PUBLIC_API_CONFIG_IMS`：IMS 服务地址
 - `JWT_SECRET`：权限 JWT 签名密钥
+- `DATABASE_URL`：数据库连接字符串（SQLite: `file:./ehs.sqlite`，PostgreSQL: `postgres://...`）
 - `WEBHOOK_BASE_URL`：企业微信 Webhook 基地址（默认 `https://qyapi.weixin.qq.com/cgi-bin/webhook/send`）
 - `SCHEDULER_WORKER_PATH`：可选，定时任务 Worker 路径覆盖
 - `SCHEDULER_MAX_CONCURRENCY`：可选，定时任务并发上限
+- `POSTGRES_URL`：PostgreSQL 数据库连接字符串（使用 PostgreSQL 时需要）
+
+## 数据库配置
+
+项目默认使用 SQLite（`ehs.sqlite`），也支持 PostgreSQL：
+
+- **SQLite**：开箱即用，无需额外配置
+- **PostgreSQL**：设置 `POSTGRES_URL` 环境变量，并使用 `drizzle.pg.config.ts` 进行迁移
 
 ## 目录结构
 
@@ -116,7 +142,16 @@ permissionsRouter.get(
 - 值班管理：人员、日志、稽查、换班、排班（`/dutyManagement/*`）
 - 积分管理：人员、分类、事件、日志、排名、KPI（`/points/*`）
 - 物资管理：库存、申请、审批、出入库记录（`/goods/*`）
+- 锁具管理：申请、审批、库存（`/lockApplication`、`/lockApproval`、`/lockInventory`）
 - Webhook：值班日志推送、带班通知、日志稽查（`server/api/webhook/*`）
 - 认证：IMS 登录、权限 Token（`server/api/auth`）
 - 定时任务：任务管理与 Worker（`server/utils/scheduler`、`/system/corn`）
+
+### 生产环境
+
+```bash
+pnpm build
+pnpm start
+```
+
 
