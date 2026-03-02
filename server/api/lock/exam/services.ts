@@ -1,6 +1,6 @@
 import { db } from "../../../db/db";
 import { examResult, lockApplication } from "../../../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export async function submitExamResult(
   exam: {
@@ -14,8 +14,30 @@ export async function submitExamResult(
   },
   passed: boolean
 ) {
-  // Insert exam result
-  const [result] = await db.insert(examResult).values(exam).returning();
+  // Check if exam result already exists for this application
+  const existingResult = await db.query.examResult.findFirst({
+    where: eq(examResult.applicationId, exam.applicationId),
+  });
+
+  let result;
+
+  if (existingResult) {
+    // Update existing exam result (idempotent)
+    [result] = await db
+      .update(examResult)
+      .set({
+        passed: exam.passed,
+        score: exam.score,
+        examDate: exam.examDate,
+        remark: exam.remark,
+        enteredBy: exam.enteredBy,
+      })
+      .where(eq(examResult.applicationId, exam.applicationId))
+      .returning();
+  } else {
+    // Insert new exam result
+    [result] = await db.insert(examResult).values(exam).returning();
+  }
 
   // Update application status
   const newStatus = passed ? "exam_passed" : "rejected";

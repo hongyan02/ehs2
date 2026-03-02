@@ -25,6 +25,7 @@ route.get("/my", authMiddleware, getMyApplicationsController);
 route.get("/all", authMiddleware, requirePermission("LOCK_VIEW_ALL"), getAllApplicationsController);
 route.get("/locks", authMiddleware, requirePermission("LOCK_VIEW_ALL"), getAllLockDetailsController);
 route.get("/:id", getApplicationByIdController);
-route.patch("/:id", updateApplicationController);
+// Update application - requires LOCK_ADMIN permission
+route.patch("/:id", authMiddleware, requirePermission("LOCK_ADMIN"), updateApplicationController);
 
 export default route;

@@ -12,8 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CustomPagination from "@/components/CustomPagination";
-import { useMyApplications } from "@/features/lockApplication/query/api";
+import { useMyApplications } from "@/features/lock/lockApplication/query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Timeline } from "@/features/lock/components/Timeline";
 
 const STATUS_MAP: Record<string, string> = {
   submitted: "待组长审批",
@@ -56,6 +57,13 @@ interface Application {
     comment?: string;
     approvalTime?: string;
   }>;
+  examResult?: {
+    id: number;
+    passed: boolean;
+    score: number;
+    examDate: string;
+    screenshotUrl?: string;
+  };
 }
 
 export default function LockMyApplicationPage() {
@@ -69,7 +77,7 @@ export default function LockMyApplicationPage() {
     pageSize,
   });
 
-  const applicationList = data?.data?.data ?? [];
+  const applicationList = data?.data ?? [];
 
   const handleViewDetails = (app: Application) => {
     setSelectedApp(app);
@@ -152,7 +160,7 @@ export default function LockMyApplicationPage() {
           <CustomPagination
             page={page}
             pageSize={pageSize}
-            total={data?.data?.total || 0}
+            total={data?.total || 0}
             onChange={setPage}
             className="mt-4 justify-end"
           />
@@ -237,31 +245,17 @@ export default function LockMyApplicationPage() {
                 </div>
               </div>
 
-              {/* 审批历史 */}
-              {selectedApp.approvalHistory && selectedApp.approvalHistory.length > 0 && (
-                <div className="border-t pt-4">
-                  <h3 className="font-medium mb-2">审批记录</h3>
-                  <div className="space-y-2">
-                    {selectedApp.approvalHistory.map((approval) => (
-                      <div key={approval.id} className="text-sm bg-gray-50 p-2 rounded">
-                        <div className="flex justify-between">
-                          <span>
-                            第{approval.approvalLevel}级审批 -{" "}
-                            {approval.status === "approve" ? "通过" : "驳回"}
-                          </span>
-                          <span className="text-gray-500">{approval.approvalTime}</span>
-                        </div>
-                        <div className="text-gray-600">
-                          审批人: {approval.approver} ({approval.approverNo})
-                        </div>
-                        {approval.comment && (
-                          <div className="text-gray-500">意见: {approval.comment}</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* 流程进度时间轴 */}
+              <div className="border-t pt-4">
+                <h3 className="font-medium mb-4">流程进度</h3>
+                <Timeline
+                  approvalHistory={selectedApp.approvalHistory || []}
+                  examResult={selectedApp.examResult || null}
+                  status={selectedApp.status}
+                  applicationTime={selectedApp.applicationTime}
+                  currentApprovalLevel={selectedApp.currentApprovalLevel}
+                />
+              </div>
             </div>
           )}
         </DialogContent>

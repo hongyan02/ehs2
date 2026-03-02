@@ -1,5 +1,5 @@
 import { db } from "../../../db/db";
-import { lockApplication, lockApplicationDetail, lockApproval } from "../../../db/schema";
+import { lockApplication, lockApplicationDetail, lockApproval, examResult } from "../../../db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 
 export async function getLockApplications(params?: {
@@ -16,15 +16,22 @@ export async function getLockApplications(params?: {
     conditions.push(eq(lockApplication.status, params.status));
   }
 
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  // Get total count
+  const countResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(lockApplication)
+    .where(whereClause);
+  const total = countResult[0]?.count || 0;
+
   const applications = await db
     .select()
     .from(lockApplication)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .where(whereClause)
     .orderBy(desc(lockApplication.id))
     .limit(pageSize)
     .offset(offset);
-
-  const total = applications.length;
 
   return {
     data: applications,
@@ -57,7 +64,7 @@ export async function getMyApplications(applicantNo: string, params?: {
     .limit(pageSize)
     .offset(offset);
 
-  // Get approval history for each application
+  // Get approval history and exam result for each application
   const applicationsWithHistory = await Promise.all(
     applications.map(async (app) => {
       const approvals = await db
@@ -65,7 +72,12 @@ export async function getMyApplications(applicantNo: string, params?: {
         .from(lockApproval)
         .where(eq(lockApproval.applicationId, app.id))
         .orderBy(lockApproval.approvalLevel);
-      return { ...app, approvalHistory: approvals };
+
+      const examRec = await db.query.examResult.findFirst({
+        where: eq(examResult.applicationId, app.id),
+      });
+
+      return { ...app, approvalHistory: approvals, examResult: examRec || null };
     })
   );
 
@@ -98,7 +110,7 @@ export async function getAllApplications(params?: {
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(lockApplication.id));
 
-  // Get lock details and approval history for each application
+  // Get lock details, approval history and exam result for each application
   const applicationsWithDetails = await Promise.all(
     applications.map(async (app) => {
       const details = await db
@@ -112,10 +124,15 @@ export async function getAllApplications(params?: {
         .where(eq(lockApproval.applicationId, app.id))
         .orderBy(lockApproval.approvalLevel);
 
+      const examRec = await db.query.examResult.findFirst({
+        where: eq(examResult.applicationId, app.id),
+      });
+
       return {
         ...app,
         lockDetails: details,
         approvalHistory: approvals,
+        examResult: examRec || null,
       };
     })
   );
@@ -181,7 +198,7 @@ export async function getApplicationsByEmployeeNo(employeeNo: string) {
     .where(eq(lockApplication.applicantNo, employeeNo))
     .orderBy(desc(lockApplication.id));
 
-  // Get lock details and approval history for each application
+  // Get lock details, approval history and exam result for each application
   const applicationsWithDetails = await Promise.all(
     applications.map(async (app) => {
       const details = await db
@@ -195,10 +212,15 @@ export async function getApplicationsByEmployeeNo(employeeNo: string) {
         .where(eq(lockApproval.applicationId, app.id))
         .orderBy(lockApproval.approvalLevel);
 
+      const examRec = await db.query.examResult.findFirst({
+        where: eq(examResult.applicationId, app.id),
+      });
+
       return {
         ...app,
         lockDetails: details,
         approvalHistory: approvals,
+        examResult: examRec || null,
       };
     })
   );

@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import CustomPagination from "@/components/CustomPagination";
-import { useAllLockDetails } from "@/features/lockApplication/query/api";
+import { useAllLockDetails } from "@/features/lock/lockApplication/query";
 import useInfoStore from "@/stores/useUserInfo";
 
 const STATUS_MAP: Record<string, string> = {

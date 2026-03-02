@@ -49,15 +49,13 @@ export const submitApprovalController = async (c: Context) => {
     const userNo = user.employeeId || "UNKNOWN";
 
     // Check permission based on approval level
-    if (validated.approvalLevel < 4) {
-      const permissionCheck = await verifyApprovalPermission(
-        validated.applicationId,
-        validated.approvalLevel,
-        userNo
-      );
-      if (!permissionCheck.hasPermission) {
-        return c.json({ success: false, message: permissionCheck.message }, 403);
-      }
+    const permissionCheck = await verifyApprovalPermission(
+      validated.applicationId,
+      validated.approvalLevel,
+      userNo
+    );
+    if (!permissionCheck.hasPermission) {
+      return c.json({ success: false, message: permissionCheck.message }, 403);
     }
 
     const approvalRecord = {
@@ -77,6 +75,9 @@ export const submitApprovalController = async (c: Context) => {
     if (error instanceof z.ZodError) {
       return c.json({ success: false, message: error.issues }, 400);
     }
+    if (error instanceof Error) {
+      return c.json({ success: false, message: error.message }, 400);
+    }
     console.error("submitApprovalController error:", error);
     return c.json({ success: false, message: "服务器错误" }, 500);
   }
@@ -90,16 +91,12 @@ export const getPendingApprovalsController = async (c: Context) => {
     const user = c.get("user");
     const userNo = user?.employeeId;
 
-    // Check if user has LOCK_REGISTRATION permission (for level 4)
-    const userPermissions = user?.permissions || [];
-    const hasRegistrationPermission = userPermissions.includes("LOCK_REGISTRATION");
-
     // 不传递默认 level，让后端根据用户工号自动确定审批级别
     // 如果传了 level 参数，则使用指定的级别（用于管理后台查看特定级别）
+    // 权限校验通过 system_approver 表进行
     const result = await getPendingApprovals({
       level: params.level, // 只有显式传递时才生效
       userNo: userNo || undefined,
-      hasRegistrationPermission,
     });
     return c.json({ success: true, data: result });
   } catch (error) {

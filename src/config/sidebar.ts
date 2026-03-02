@@ -30,6 +30,10 @@ export const menuItems: MenuItem[] = [
                 url: "/system/permissions",
             },
             {
+                title: "审批人员管理",
+                url: "/system/approvers",
+            },
+            {
                 title: "推送管理",
                 url: "/system/webhook",
             },
@@ -127,6 +131,11 @@ export const menuItems: MenuItem[] = [
                 title: "锁具库存",
                 url: "/lockInventory",
                 require: "LOCK_VIEW_ALL",
+            },
+            {
+                title: "信息管理",
+                url: "/lockInfoManage",
+                require: "ADMIN",
             },
         ],
     },

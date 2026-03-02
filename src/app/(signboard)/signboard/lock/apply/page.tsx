@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import Step1Form from "@/features/lockApplication/components/Step1Form";
-import ApplicationReview from "@/features/lockApplication/components/ApplicationReview";
-import { useCreateLockApplication } from "@/features/lockApplication/query/api";
+import Step1Form from "@/features/lock/lockApplication/components/Step1Form";
+import ApplicationReview from "@/features/lock/lockApplication/components/ApplicationReview";
+import { useCreateLockApplication } from "@/features/lock/lockApplication/query";
 import type { LockApplicationStep1 } from "@/lib/schemas/lock-application";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";

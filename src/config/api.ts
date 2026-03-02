@@ -4,6 +4,19 @@ export const API_SERVICE = {
         login: "/api/auth/login", //登陆
         logout: "/api/auth/logout", //登出（清除 HttpOnly cookie）
     },
+    //锁具模块
+    lock: {
+        config: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/config",
+        configProcesses: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/config/processes",
+        examConfig: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/exam-config",
+        application: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/application",
+        applicationMy: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/application/my",
+        applicationAll: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/application/all",
+        applicationLocks: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/application/locks",
+        approval: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/approval",
+        approvalPending: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/approval/pending",
+        examResult: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/exam/result",
+    },
     //用户信息相关
     userInfo: {
         getInfo: process.env.NEXT_PUBLIC_API_CONFIG_IMS + "/getInfo", //获取用户信息

@@ -1,5 +1,5 @@
 import { db } from "../../../db/db";
-import { lockApplication, lockApproval } from "../../../db/schema";
+import { lockApplication, lockApproval, systemApprover } from "../../../db/schema";
 import { eq, desc, and } from "drizzle-orm";
 
 // Linear approval flow mapping:
@@ -24,6 +24,15 @@ const STATUS_MAP: Record<number, string> = {
   4: "registration", // Level 4 通过 -> status 变为 "registration"，已完成
 };
 
+// Helper function to check if user is in system approver table (module='lock')
+async function checkSystemApprover(userNo: string): Promise<boolean> {
+  const approvers = await db
+    .select()
+    .from(systemApprover)
+    .where(and(eq(systemApprover.module, "lock"), eq(systemApprover.status, 1)));
+  return approvers.some((o) => o.no === userNo);
+}
+
 // Verify if user has permission to approve at a specific level
 export async function verifyApprovalPermission(
   applicationId: number,
@@ -40,35 +49,50 @@ export async function verifyApprovalPermission(
 
   switch (approvalLevel) {
     case 1:
-      // 组长/主管审批 - 需要工号匹配
+      // 组长/主管审批 - 只能通过申请中指定的工号校验
       if (application.leaderNo && application.leaderNo === userNo) {
         return { hasPermission: true };
       }
       return { hasPermission: false, message: "您不是该申请的组长/主管审批人，无权审批" };
 
     case 2:
-      // 部门长审批 - 需要工号匹配
+      // 部门长审批 - 只能通过申请中指定的工号校验
       if (application.managerNo && application.managerNo === userNo) {
         return { hasPermission: true };
       }
       return { hasPermission: false, message: "您不是该申请的部门长审批人，无权审批" };
 
     case 3:
-      // 安环部审批 - 需要工号匹配
+      // 安环部审批 - 支持两种方式：
+      // 1. 申请中指定的安环部审批人
+      // 2. 系统审批人员表中 module='lock' 的人员
       if (application.safetyOfficerNo && application.safetyOfficerNo === userNo) {
+        return { hasPermission: true };
+      }
+      if (await checkSystemApprover(userNo)) {
         return { hasPermission: true };
       }
       return { hasPermission: false, message: "您不是该申请的安环部审批人，无权审批" };
 
     case 4:
-      // 登记审批 - 需要特殊权限 (LOCK_REGISTRATION)
-      // This is handled by checking user permissions in the controller
-      return { hasPermission: true };
+      // 登记审批 - 通过 system_approver 表校验
+      if (await checkSystemApprover(userNo)) {
+        return { hasPermission: true };
+      }
+      return { hasPermission: false, message: "您不是登记审批人，无权审批" };
 
     default:
       return { hasPermission: false, message: "无效的审批级别" };
   }
 }
+
+// Expected status for each approval level
+const EXPECTED_STATUS_FOR_LEVEL: Record<number, string> = {
+  1: "submitted",     // Level 1 expects status = "submitted"
+  2: "approval_l1",  // Level 2 expects status = "approval_l1"
+  3: "approval_l2",  // Level 3 expects status = "approval_l2"
+  4: "exam_passed",  // Level 4 expects status = "exam_passed"
+};
 
 export async function submitApproval(
   approval: {
@@ -84,6 +108,52 @@ export async function submitApproval(
   level: number,
   action: "approve" | "reject"
 ) {
+  // Get application to validate status
+  const application = await db.query.lockApplication.findFirst({
+    where: eq(lockApplication.id, approval.applicationId),
+  });
+
+  if (!application) {
+    throw new Error("申请不存在");
+  }
+
+  // Check if application is in a valid state for approval
+  if (application.status === "rejected") {
+    throw new Error("该申请已被驳回，无法审批");
+  }
+  if (application.status === "registered") {
+    throw new Error("该申请已完成审批，无法重复审批");
+  }
+
+  // Validate approval level matches current application status (approval order check)
+  const expectedStatus = EXPECTED_STATUS_FOR_LEVEL[level];
+  if (expectedStatus && application.status !== expectedStatus) {
+    const statusMessages: Record<string, string> = {
+      submitted: "待组长审批",
+      approval_l1: "组长审批中，请先完成组长审批",
+      approval_l2: "部门长审批中，请先完成部门长审批",
+      approval_l3: "安环部审批中，请先完成安环部审批",
+      exam_eligible: "等待考试",
+      exam_passed: "等待登记审批",
+      registration: "登记审批中",
+      registered: "已完成",
+      rejected: "已驳回",
+    };
+    throw new Error(`审批顺序错误：当前申请${statusMessages[application.status] || application.status}`);
+  }
+
+  // Check if approval already exists for this level and application
+  const existingApproval = await db.query.lockApproval.findFirst({
+    where: and(
+      eq(lockApproval.applicationId, approval.applicationId),
+      eq(lockApproval.approvalLevel, level)
+    ),
+  });
+
+  if (existingApproval) {
+    throw new Error(`该级别审批已存在，无法重复提交`);
+  }
+
   const [approvalRecord] = await db.insert(lockApproval).values(approval).returning();
 
   let newStatus: string;
@@ -123,7 +193,6 @@ export async function getPendingApprovals(params?: {
   pageSize?: number;
   level?: number;
   userNo?: string;
-  hasRegistrationPermission?: boolean;
 }) {
   const page = params?.page || 1;
   const pageSize = params?.pageSize || 10;
@@ -131,7 +200,6 @@ export async function getPendingApprovals(params?: {
 
   const targetLevel = params?.level;
   const userNo = params?.userNo;
-  const hasRegistrationPermission = params?.hasRegistrationPermission || false;
 
   // 如果没有指定 level 且有 userNo，根据用户工号自动确定审批级别
   // 否则查询所有待审批记录（用于管理后台）
@@ -140,9 +208,9 @@ export async function getPendingApprovals(params?: {
   if (!targetLevel && userNo) {
     // 根据用户权限确定可见的审批级别
     // 需要查询多个状态，因为用户可能有多个审批角色
-    targetStatuses = ["submitted", "approval_l1", "approval_l2"];
-  } else if (targetLevel === 4 && hasRegistrationPermission) {
-    // Level 4 (登记审批) - 需要特殊权限
+    targetStatuses = ["submitted", "approval_l1", "approval_l2", "exam_passed"];
+  } else if (targetLevel === 4) {
+    // Level 4 (登记审批)
     targetStatuses = ["exam_passed"];
   } else if (targetLevel) {
     // 指定了具体的审批级别
@@ -179,6 +247,9 @@ export async function getPendingApprovals(params?: {
   if (userNo) {
     const filtered: typeof applications = [];
 
+    // Check if user is in system approver table (module='lock')
+    const isSystemApprover = await checkSystemApprover(userNo);
+
     for (const app of applications) {
       // Level 1 (组长): status = "submitted"，需要 leaderNo 匹配
       if (app.status === "submitted" && app.leaderNo === userNo) {
@@ -188,12 +259,12 @@ export async function getPendingApprovals(params?: {
       else if (app.status === "approval_l1" && app.managerNo === userNo) {
         filtered.push(app);
       }
-      // Level 3 (安环部): status = "approval_l2"，需要 safetyOfficerNo 匹配
-      else if (app.status === "approval_l2" && app.safetyOfficerNo === userNo) {
+      // Level 3 (安环部): status = "approval_l2"，需要 safetyOfficerNo 匹配 或 系统审批表中人员
+      else if (app.status === "approval_l2" && (app.safetyOfficerNo === userNo || isSystemApprover)) {
         filtered.push(app);
       }
-      // Level 4 (登记审批): status = "exam_passed"，需要特殊权限
-      else if (app.status === "exam_passed" && hasRegistrationPermission) {
+      // Level 4 (登记审批): status = "exam_passed"，需要系统审批表中人员
+      else if (app.status === "exam_passed" && isSystemApprover) {
         filtered.push(app);
       }
     }

@@ -555,19 +555,117 @@ export const examResult = sqliteTable("exam_result", {
 // 匿名访问Token表
 export const anonymousToken = sqliteTable("anonymous_token", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  
+
   // Token值
   token: text("token").notNull().unique(),
-  
+
   // 关联的申请ID（可选）
   applicationId: integer("application_id"),
-  
+
   // 到期时间
   expiresAt: text("expires_at"),
-  
+
   // 创建时间
   createTime: text("create_time").notNull(),
-  
+
+  // 更新时间
+  updateTime: text("update_time").notNull(),
+});
+
+// ============================================
+// Lock Module Config Tables
+// ============================================
+
+// 锁具配置表 (部门、工序、班组枚举值)
+export const lockConfig = sqliteTable("lock_config", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+
+  // 类型: department=部门, process=工序, team=班组
+  type: text("type").notNull(),
+
+  // 配置名称
+  name: text("name").notNull(),
+
+  // 配置编码 (工序用)
+  code: text("code"),
+
+  // 工序ID (班组用，关联到工序)
+  processId: integer("process_id"),
+
+  // 责任经理姓名 (工序用)
+  managerName: text("manager_name"),
+
+  // 责任经理工号 (工序用)
+  managerNo: text("manager_no"),
+
+  // 安环工程师姓名
+  safetyEngineerName: text("safety_engineer_name"),
+
+  // 安环工程师工号
+  safetyEngineerNo: text("safety_engineer_no"),
+
+  // 排序
+  sortOrder: integer("sort_order").default(0),
+
+  // 状态: 0=禁用, 1=启用
+  status: integer("status").default(1),
+
+  // 创建时间
+  createTime: text("create_time").notNull(),
+
+  // 更新时间
+  updateTime: text("update_time").notNull(),
+});
+
+// 亿纬学堂考试配置表
+export const lockExamConfig = sqliteTable("lock_exam_config", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+
+  // 亿纬学堂课程链接
+  courseUrl: text("course_url"),
+
+  // 及格分数
+  passingScore: integer("passing_score").default(60),
+
+  // 状态: 0=禁用, 1=启用
+  status: integer("status").default(1),
+
+  // 备注
+  remark: text("remark"),
+
+  // 创建时间
+  createTime: text("create_time").notNull(),
+
+  // 更新时间
+  updateTime: text("update_time").notNull(),
+});
+
+// ============================================
+// System Module Tables (通用表，可被多个模块复用)
+// ============================================
+
+// 通用审批人员表
+export const systemApprover = sqliteTable("system_approver", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+
+  // 姓名
+  name: text("name").notNull(),
+
+  // 工号
+  no: text("no").notNull(),
+
+  // 模块标识 (如: lock, energy 等)
+  module: text("module").notNull(),
+
+  // 角色 (如: safety, manager 等)
+  role: text("role").notNull(),
+
+  // 状态: 0=禁用, 1=启用
+  status: integer("status").default(1),
+
+  // 创建时间
+  createTime: text("create_time").notNull(),
+
   // 更新时间
   updateTime: text("update_time").notNull(),
 });

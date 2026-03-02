@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQueryByEmployeeNo } from "@/features/lockApplication/query/api";
+import { useQueryByEmployeeNo } from "@/features/lock/lockApplication/query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Lock, ChevronDown, ChevronUp, GraduationCap, FileText } from "lucide-react";
+import { Timeline } from "@/features/lock/components/Timeline";
 import {
   Table,
   TableBody,
@@ -25,6 +27,9 @@ const STATUS_MAP: Record<string, string> = {
   registered: "已登记入库",
   rejected: "已驳回",
 };
+
+// Statuses that can take exam
+const EXAM_STATUSES = ["approval_l3", "exam_eligible"];
 
 interface Application {
   id: number;
@@ -53,6 +58,13 @@ interface Application {
     comment?: string;
     approvalTime?: string;
   }>;
+  examResult?: {
+    id: number;
+    passed: boolean;
+    score: number;
+    examDate: string;
+    screenshotUrl?: string;
+  };
 }
 
 export default function LockQueryPage() {
@@ -61,7 +73,22 @@ export default function LockQueryPage() {
   const employeeNo = params.id as string;
 
   const { data, isLoading, isError } = useQueryByEmployeeNo(employeeNo);
-  const applications: Application[] = data?.data || [];
+  const applications: Application[] = data || [];
+
+  // Track expanded state for each application
+  const [expandedApps, setExpandedApps] = useState<Set<number>>(new Set());
+
+  const toggleExpand = (appId: number) => {
+    setExpandedApps((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(appId)) {
+        newSet.delete(appId);
+      } else {
+        newSet.add(appId);
+      }
+      return newSet;
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     const statusColors: Record<string, string> = {
@@ -82,8 +109,16 @@ export default function LockQueryPage() {
     );
   };
 
+  const canTakeExam = (status: string) => {
+    return EXAM_STATUSES.includes(status);
+  };
+
   const handleBack = () => {
     router.push("/signboard/lock");
+  };
+
+  const handleExam = (applicationId: number) => {
+    router.push(`/signboard/lock/exam/${applicationId}`);
   };
 
   return (
@@ -126,8 +161,9 @@ export default function LockQueryPage() {
       {!isLoading && !isError && applications.length > 0 && (
         <div className="space-y-4">
           {applications.map((app) => (
-            <div key={app.id} className="bg-white rounded-lg p-4 shadow-sm">
-                {/* Header */}
+            <div key={app.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+              {/* Basic Info */}
+              <div className="p-4">
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <p className="font-medium">{app.applicationCode}</p>
@@ -136,8 +172,7 @@ export default function LockQueryPage() {
                   {getStatusBadge(app.status)}
                 </div>
 
-                {/* Basic Info */}
-                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <span className="text-gray-500">申请人：</span>
                     {app.applicantName}
@@ -155,54 +190,76 @@ export default function LockQueryPage() {
                     {app.phone}
                   </div>
                 </div>
+              </div>
 
-                {/* Lock Details */}
-                {app.lockDetails && app.lockDetails.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-sm font-medium mb-1">锁具明细</p>
-                    <Table className="text-sm">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>类型</TableHead>
-                          <TableHead>规格</TableHead>
-                          <TableHead>数量</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {app.lockDetails.map((detail) => (
-                          <TableRow key={detail.id}>
-                            <TableCell>{detail.lockType}</TableCell>
-                            <TableCell>{detail.specification || "-"}</TableCell>
-                            <TableCell>{detail.quantity}</TableCell>
+              {/* Buttons */}
+              <div className="grid grid-cols-2 gap-2 border-t border-gray-100">
+                {canTakeExam(app.status) && (
+                  <Button
+                    variant="ghost"
+                    className="rounded-none py-6 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                    onClick={() => handleExam(app.id)}
+                  >
+                    <GraduationCap className="w-4 h-4 mr-2" />
+                    学习&考试
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  className={`rounded-none py-6 hover:bg-gray-50 ${!canTakeExam(app.status) ? 'col-span-2' : ''}`}
+                  onClick={() => toggleExpand(app.id)}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  详细
+                  {expandedApps.has(app.id) ? (
+                    <ChevronUp className="w-4 h-4 ml-auto" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 ml-auto" />
+                  )}
+                </Button>
+              </div>
+
+              {/* Detailed Content */}
+              {expandedApps.has(app.id) && (
+                <div className="border-t border-gray-100 p-4 bg-gray-50">
+                  {/* Lock Details */}
+                  {app.lockDetails && app.lockDetails.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-sm font-medium mb-2">锁具明细</p>
+                      <Table className="text-sm">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>类型</TableHead>
+                            <TableHead>规格</TableHead>
+                            <TableHead>数量</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-
-                {/* Approval History */}
-                {app.approvalHistory && app.approvalHistory.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium mb-1">审批记录</p>
-                    <div className="space-y-1">
-                      {app.approvalHistory.map((approval) => (
-                        <div
-                          key={approval.id}
-                          className="text-xs bg-gray-50 p-2 rounded flex justify-between"
-                        >
-                          <span>
-                            第{approval.approvalLevel}级 -{" "}
-                            {approval.status === "approve" ? "通过" : "驳回"}
-                          </span>
-                          <span className="text-gray-500">
-                            {approval.approver} {approval.approvalTime}
-                          </span>
-                        </div>
-                      ))}
+                        </TableHeader>
+                        <TableBody>
+                          {app.lockDetails.map((detail) => (
+                            <TableRow key={detail.id}>
+                              <TableCell>{detail.lockType}</TableCell>
+                              <TableCell>{detail.specification || "-"}</TableCell>
+                              <TableCell>{detail.quantity}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
+                  )}
+
+                  {/* Approval History - Timeline */}
+                  <div>
+                    <p className="text-sm font-medium mb-2">流程进度</p>
+                    <Timeline
+                      approvalHistory={app.approvalHistory || []}
+                      examResult={app.examResult || null}
+                      status={app.status}
+                      applicationTime={app.applicationTime}
+                      currentApprovalLevel={app.currentApprovalLevel}
+                    />
                   </div>
-                )}
+                </div>
+              )}
             </div>
           ))}
         </div>
