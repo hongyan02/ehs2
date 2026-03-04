@@ -23,6 +23,7 @@ export interface LockExamConfig {
   passingScore: number;
   status: number;
   remark?: string;
+  practiceFileUrl?: string;
   createTime: string;
   updateTime: string;
 }
@@ -59,4 +60,15 @@ export function saveExamConfig(data: {
   remark?: string;
 }) {
   return request.post(API_SERVICE.lock.examConfig, data);
+}
+
+// 上传实操考核文件
+export function uploadPracticeFile(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  return request.post(API_SERVICE.lock.examConfigPracticeFile, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 }

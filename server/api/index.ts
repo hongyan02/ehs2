@@ -20,6 +20,7 @@ import lockApprovalRoute from "./lock/approval/route";
 import lockExamRoute from "./lock/exam/route";
 import lockConfigRoute from "./lock/config/route";
 import lockExamConfigRoute from "./lock/exam-config/route";
+import lockInventoryRoute from "./lock/inventory/route";
 import systemApproversRoute from "./system/approvers/route";
 import uploadRoute from "./upload/route";
 
@@ -49,6 +50,7 @@ app.route("/lock/approval", lockApprovalRoute);
 app.route("/lock/exam", lockExamRoute);
 app.route("/lock/config", lockConfigRoute);
 app.route("/lock/exam-config", lockExamConfigRoute);
+app.route("/lock/inventory", lockInventoryRoute);
 app.route("/system/approvers", systemApproversRoute);
 app.route("/upload", uploadRoute);
 

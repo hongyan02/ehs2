@@ -11,6 +11,8 @@ import {
   getAllApplicationsController,
   getAllLockDetailsController,
   queryByEmployeeNoController,
+  getPracticeEligibleController,
+  generateLockNumberController,
 } from "./controller";
 
 const route = new Hono();
@@ -24,6 +26,10 @@ route.get("/", getApplicationsController);
 route.get("/my", authMiddleware, getMyApplicationsController);
 route.get("/all", authMiddleware, requirePermission("LOCK_VIEW_ALL"), getAllApplicationsController);
 route.get("/locks", authMiddleware, requirePermission("LOCK_VIEW_ALL"), getAllLockDetailsController);
+// 待实操考核列表
+route.get("/practice-eligible", authMiddleware, requirePermission("LOCK_VIEW_ALL"), getPracticeEligibleController);
+// 生成锁具编号
+route.post("/generate-lock-number", authMiddleware, requirePermission("LOCK_VIEW_ALL"), generateLockNumberController);
 route.get("/:id", getApplicationByIdController);
 // Update application - requires LOCK_ADMIN permission
 route.patch("/:id", authMiddleware, requirePermission("LOCK_ADMIN"), updateApplicationController);

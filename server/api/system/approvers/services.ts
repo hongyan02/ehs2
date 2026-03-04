@@ -1,45 +1,16 @@
 import { db } from "../../../db/db";
 import { systemApprover } from "../../../db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
-// 获取审批人员列表（支持按module/role筛选）
-export async function getApprovers(module?: string, role?: string) {
-  let condition = undefined;
-
-  if (module && role) {
-    condition = and(eq(systemApprover.module, module), eq(systemApprover.role, role));
-  } else if (module) {
-    condition = eq(systemApprover.module, module);
-  } else if (role) {
-    condition = eq(systemApprover.role, role);
-  }
-
-  if (condition) {
-    return db.select().from(systemApprover).where(condition).orderBy(systemApprover.id);
-  }
-  return db.select().from(systemApprover).orderBy(systemApprover.module, systemApprover.id);
-}
-
-// 根据module和role获取审批人员
-export async function getApproversByModuleAndRole(module: string, role: string) {
-  return db
-    .select()
-    .from(systemApprover)
-    .where(and(eq(systemApprover.module, module), eq(systemApprover.role, role), eq(systemApprover.status, 1)));
-}
-
-// 检查工号是否在指定模块角色中
-export async function isApprover(userNo: string, module: string, role: string): Promise<boolean> {
-  const approvers = await getApproversByModuleAndRole(module, role);
-  return approvers.some((a) => a.no === userNo);
+// 获取审批人员列表
+export async function getApprovers() {
+  return db.select().from(systemApprover).orderBy(desc(systemApprover.id));
 }
 
 // 创建审批人员
 export async function createApprover(data: {
   name: string;
   no: string;
-  module: string;
-  role: string;
   status?: number;
 }) {
   const now = new Date().toISOString();
@@ -61,8 +32,6 @@ export async function updateApprover(
   data: {
     name?: string;
     no?: string;
-    module?: string;
-    role?: string;
     status?: number;
   }
 ) {

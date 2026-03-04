@@ -477,51 +477,31 @@ export const lockApplication = sqliteTable("lock_application", {
   updateTime: text("update_time").notNull(),
 });
 
-// 锁具明细表
-export const lockApplicationDetail = sqliteTable("lock_application_detail", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  
-  // 所属申请单号
-  applicationCode: text("application_code").notNull(),
-  
-  // 锁具类型
-  lockType: text("lock_type").notNull(),
-  
-  // 规格型号
-  specification: text("specification"),
-  
-  // 数量
-  quantity: integer("quantity").notNull(),
-  
-  // 用途说明
-  purpose: text("purpose"),
-});
-
 // 审批记录表
 export const lockApproval = sqliteTable("lock_approval", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  
+
   // 申请ID
   applicationId: integer("application_id").notNull(),
-  
+
   // 审批级别 (1=组长/主管, 2=部门长, 3=安环部, 4=登记审批)
   approvalLevel: integer("approval_level").notNull(),
-  
+
   // 审批状态
   status: text("status").notNull(), // pending/approved/rejected
-  
+
   // 审批人
   approver: text("approver"),
-  
+
   // 审批人工号
   approverNo: text("approver_no"),
-  
+
   // 审批意见
   comment: text("comment"),
-  
+
   // 审批时间
   approvalTime: text("approval_time"),
-  
+
   // 创建时间
   createTime: text("create_time").notNull(),
 });
@@ -529,27 +509,46 @@ export const lockApproval = sqliteTable("lock_approval", {
 // 考试结果表
 export const examResult = sqliteTable("exam_result", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  
+
   // 申请ID
   applicationId: integer("application_id").notNull(),
-  
+
   // 是否通过
   passed: integer("passed").notNull(), // 0=false, 1=true
-  
+
   // 考试分数
   score: integer("score").notNull(),
-  
+
   // 考试日期
   examDate: text("exam_date").notNull(),
-  
+
   // 备注
   remark: text("remark"),
-  
+
   // 录入人
   enteredBy: text("entered_by"),
-  
+
   // 创建时间
   createTime: text("create_time").notNull(),
+
+  // ========================================
+  // 实操考核相关字段
+  // ========================================
+
+  // 实操考核日期
+  practiceDate: text("practice_date"),
+
+  // 实操考核是否通过 (0=false, 1=true)
+  practicePassed: integer("practice_passed"),
+
+  // 实操考核分数
+  practiceScore: integer("practice_score"),
+
+  // 分配的锁具类型 (red/yellow)
+  lockType: text("lock_type"),
+
+  // 分配的锁具数量
+  lockQuantity: integer("lock_quantity"),
 });
 
 // 匿名访问Token表
@@ -627,6 +626,9 @@ export const lockExamConfig = sqliteTable("lock_exam_config", {
   // 及格分数
   passingScore: integer("passing_score").default(60),
 
+  // 实操考核文件URL
+  practiceFileUrl: text("practice_file_url"),
+
   // 状态: 0=禁用, 1=启用
   status: integer("status").default(1),
 
@@ -640,8 +642,43 @@ export const lockExamConfig = sqliteTable("lock_exam_config", {
   updateTime: text("update_time").notNull(),
 });
 
+// 锁具库存表
+export const lockInventory = sqliteTable("lock_inventory", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+
+  // 锁具编号
+  lockNumber: text("lock_number").notNull().unique(),
+
+  // 锁具类别 (red/yellow)
+  lockType: text("lock_type").notNull(),
+
+  // 持有人姓名
+  holderName: text("holder_name").notNull(),
+
+  // 持有人工号
+  holderNo: text("holder_no").notNull(),
+
+  // 部门
+  department: text("department").notNull(),
+
+  // 所属申请单号
+  applicationCode: text("application_code").notNull(),
+
+  // 状态: in_use=使用中, returned=已归还, scrapped=已报废
+  status: text("status").notNull().default("in_use"),
+
+  // 登记时间
+  registerTime: text("register_time").notNull(),
+
+  // 创建时间
+  createTime: text("create_time").notNull(),
+
+  // 更新时间
+  updateTime: text("update_time").notNull(),
+});
+
 // ============================================
-// System Module Tables (通用表，可被多个模块复用)
+// System Module Tables 
 // ============================================
 
 // 通用审批人员表
@@ -653,12 +690,6 @@ export const systemApprover = sqliteTable("system_approver", {
 
   // 工号
   no: text("no").notNull(),
-
-  // 模块标识 (如: lock, energy 等)
-  module: text("module").notNull(),
-
-  // 角色 (如: safety, manager 等)
-  role: text("role").notNull(),
 
   // 状态: 0=禁用, 1=启用
   status: integer("status").default(1),

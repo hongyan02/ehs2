@@ -128,6 +128,11 @@ export const menuItems: MenuItem[] = [
                 require: "LOCK_VIEW_ALL",
             },
             {
+                title: "实操考核管理",
+                url: "/lockPracticeManage",
+                require: "LOCK_VIEW_ALL",
+            },
+            {
                 title: "锁具库存",
                 url: "/lockInventory",
                 require: "LOCK_VIEW_ALL",
@@ -135,7 +140,7 @@ export const menuItems: MenuItem[] = [
             {
                 title: "信息管理",
                 url: "/lockInfoManage",
-                require: "ADMIN",
+                require: "LOCK_VIEW_ALL",
             },
         ],
     },

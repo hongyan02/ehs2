@@ -33,6 +33,7 @@ interface LockConfig {
   type: "department" | "process" | "team";
   name: string;
   code?: string;
+  processId?: number;
   managerName?: string;
   managerNo?: string;
   safetyEngineerName?: string;
@@ -157,8 +158,9 @@ export default function Step1Form({ onNext, defaultValues }: Step1FormProps) {
 
   const watchCertificatePhoto = watch("certificatePhoto");
   const watchProcess = watch("process");
+  const watchTeam = watch("team");
 
-  // 监听工序变化，自动填充经理信息
+  // 监听工序变化，自动填充经理信息，并清空班组
   useEffect(() => {
     if (watchProcess && processes.length > 0) {
       const processConfig = processes.find((p) => p.name === watchProcess);
@@ -171,6 +173,8 @@ export default function Step1Form({ onNext, defaultValues }: Step1FormProps) {
           setValue("managerNo", processConfig.managerNo, { shouldValidate: true });
         }
       }
+      // 工序变化时清空班组
+      setValue("team", "");
     }
   }, [watchProcess, processes, setValue]);
 
@@ -252,19 +256,30 @@ export default function Step1Form({ onNext, defaultValues }: Step1FormProps) {
         seen.add(p.name);
         return true;
       })
-      .map((p) => ({ value: p.name, label: p.name }));
+      .map((p) => ({ value: p.name, label: p.name, code: p.code || "" }));
   }, [processes]);
+
+  // 获取选中工序的 processId
+  const selectedProcessId = useMemo(() => {
+    if (!watchProcess) return null;
+    const processConfig = processes.find((p) => p.name === watchProcess);
+    return processConfig?.id || null;
+  }, [watchProcess, processes]);
 
   const teamOptions = useMemo(() => {
     const seen = new Set<string>();
-    return teams
+    // 如果选择了工序，则只显示该工序下的班组
+    const filteredTeams = selectedProcessId
+      ? teams.filter((t) => t.processId === selectedProcessId)
+      : teams;
+    return filteredTeams
       .filter((t) => {
         if (seen.has(t.name)) return false;
         seen.add(t.name);
         return true;
       })
       .map((t) => ({ value: t.name, label: t.name }));
-  }, [teams]);
+  }, [teams, selectedProcessId]);
 
   // 是否有配置数据
   const hasConfigData = departments.length > 0 || processes.length > 0 || teams.length > 0;
@@ -368,18 +383,15 @@ export default function Step1Form({ onNext, defaultValues }: Step1FormProps) {
             name="process"
             control={control}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="请选择工序" />
-                </SelectTrigger>
-                <SelectContent>
-                  {processOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <AutoComplete
+                options={processOptions}
+                placeholder="请选择工序"
+                emptyMessage="未找到匹配工序"
+                value={field.value ? { value: field.value, label: field.value } : undefined}
+                onValueChange={(option) => {
+                  field.onChange(option?.label || "");
+                }}
+              />
             )}
           />
         ) : (
@@ -400,9 +412,13 @@ export default function Step1Form({ onNext, defaultValues }: Step1FormProps) {
             name="team"
             control={control}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={!watchProcess}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="请选择班组" />
+                  <SelectValue placeholder={watchProcess ? "请选择班组" : "请先选择工序"} />
                 </SelectTrigger>
                 <SelectContent>
                   {teamOptions.map((option) => (

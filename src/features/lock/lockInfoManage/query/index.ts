@@ -7,6 +7,7 @@ import {
   deleteConfig,
   getExamConfig,
   saveExamConfig,
+  uploadPracticeFile,
   type LockConfig,
   type LockExamConfig,
 } from "./api";
@@ -70,6 +71,16 @@ export const useSaveExamConfig = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: saveExamConfig,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lockExamConfig"] });
+    },
+  });
+};
+
+export const useUploadPracticeFile = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => uploadPracticeFile(file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["lockExamConfig"] });
     },

@@ -1,35 +1,23 @@
 import { db } from "../../../db/db";
 import { lockApplication, lockApproval, systemApprover } from "../../../db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
+import {
+  APPROVAL_LEVEL_STATUS,
+  APPROVAL_STATUS_MAP,
+  EXPECTED_STATUS_FOR_LEVEL,
+  LOCK_APPLICATION_STATUS,
+} from "../../../config/lock-status";
 
-// Linear approval flow mapping:
-// Level 1 (组长/主管): status = "submitted" - waiting for level 1 approval
-// Level 2 (部门长): status = "approval_l1" - waiting for level 2 approval
-// Level 3 (安环部): status = "approval_l2" - waiting for level 3 approval
-// Level 4 (登记审批): status = "exam_passed" - waiting for level 4 approval (after exam)
+// 使用别名保持向后兼容
+const STATUS_MAP = APPROVAL_STATUS_MAP;
+const EXPECTED_STATUS = EXPECTED_STATUS_FOR_LEVEL;
 
-// APPROVAL_LEVEL_STATUS: 用于查询某个级别需要审批的申请（status值）
-const APPROVAL_LEVEL_STATUS: Record<number, string> = {
-  1: "submitted",   // Level 1 审批：查询 status = "submitted"
-  2: "approval_l1", // Level 2 审批：查询 status = "approval_l1"
-  3: "approval_l2", // Level 3 审批：查询 status = "approval_l2"
-  4: "exam_passed", // Level 4 审批：查询 status = "exam_passed"
-};
-
-// STATUS_MAP: 审批通过后更新到的状态
-const STATUS_MAP: Record<number, string> = {
-  1: "approval_l1", // Level 1 通过 -> status 变为 "approval_l1"，等待 Level 2
-  2: "approval_l2", // Level 2 通过 -> status 变为 "approval_l2"，等待 Level 3
-  3: "approval_l3", // Level 3 通过 -> status 变为 "approval_l3"，等待考试
-  4: "registration", // Level 4 通过 -> status 变为 "registration"，已完成
-};
-
-// Helper function to check if user is in system approver table (module='lock')
+// Helper function to check if user is in system approver table
 async function checkSystemApprover(userNo: string): Promise<boolean> {
   const approvers = await db
     .select()
     .from(systemApprover)
-    .where(and(eq(systemApprover.module, "lock"), eq(systemApprover.status, 1)));
+    .where(eq(systemApprover.status, 1));
   return approvers.some((o) => o.no === userNo);
 }
 
@@ -86,13 +74,6 @@ export async function verifyApprovalPermission(
   }
 }
 
-// Expected status for each approval level
-const EXPECTED_STATUS_FOR_LEVEL: Record<number, string> = {
-  1: "submitted",     // Level 1 expects status = "submitted"
-  2: "approval_l1",  // Level 2 expects status = "approval_l1"
-  3: "approval_l2",  // Level 3 expects status = "approval_l2"
-  4: "exam_passed",  // Level 4 expects status = "exam_passed"
-};
 
 export async function submitApproval(
   approval: {

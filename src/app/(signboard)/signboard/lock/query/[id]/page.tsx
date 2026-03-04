@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQueryByEmployeeNo } from "@/features/lock/lockApplication/query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Lock, ChevronDown, ChevronUp, GraduationCap, FileText } from "lucide-react";
+import { ArrowLeft, Lock, ChevronDown, ChevronUp, GraduationCap, FileText, Wrench } from "lucide-react";
 import { Timeline } from "@/features/lock/components/Timeline";
 import {
   Table,
@@ -15,21 +15,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  LOCK_APPLICATION_STATUS,
+  LOCK_STATUS_TEXT,
+  LOCK_STATUS_COLORS,
+  CAN_TAKE_EXAM_STATUSES,
+  CAN_APPLY_PRACTICE_STATUSES,
+} from "@/config/lock-status";
 
-const STATUS_MAP: Record<string, string> = {
-  submitted: "待组长审批",
-  approval_l1: "待部门长审批",
-  approval_l2: "待安环部审批",
-  approval_l3: "待考试",
-  exam_eligible: "待考试",
-  exam_passed: "待登记审批",
-  registration: "待登记审批",
-  registered: "已登记入库",
-  rejected: "已驳回",
-};
+// 状态中文描述映射
+const STATUS_MAP = LOCK_STATUS_TEXT;
+
+// 状态颜色映射
+const STATUS_COLORS = LOCK_STATUS_COLORS;
 
 // Statuses that can take exam
-const EXAM_STATUSES = ["approval_l3", "exam_eligible"];
+const EXAM_STATUSES = CAN_TAKE_EXAM_STATUSES;
+
+// Statuses that can apply for practice exam
+const PRACTICE_EXAM_STATUSES = CAN_APPLY_PRACTICE_STATUSES;
 
 interface Application {
   id: number;
@@ -91,20 +95,10 @@ export default function LockQueryPage() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusColors: Record<string, string> = {
-      submitted: "bg-blue-100 text-blue-800",
-      approval_l1: "bg-yellow-100 text-yellow-800",
-      approval_l2: "bg-orange-100 text-orange-800",
-      approval_l3: "bg-purple-100 text-purple-800",
-      exam_eligible: "bg-purple-100 text-purple-800",
-      exam_passed: "bg-cyan-100 text-cyan-800",
-      registration: "bg-cyan-100 text-cyan-800",
-      registered: "bg-green-100 text-green-800",
-      rejected: "bg-red-100 text-red-800",
-    };
+    const statusKey = status as keyof typeof STATUS_COLORS;
     return (
-      <Badge className={statusColors[status] || "bg-gray-100"}>
-        {STATUS_MAP[status] || status}
+      <Badge className={STATUS_COLORS[statusKey] || "bg-gray-100"}>
+        {STATUS_MAP[statusKey] || status}
       </Badge>
     );
   };
@@ -113,12 +107,20 @@ export default function LockQueryPage() {
     return EXAM_STATUSES.includes(status);
   };
 
+  const canApplyPracticeExam = (status: string) => {
+    return PRACTICE_EXAM_STATUSES.includes(status);
+  };
+
   const handleBack = () => {
     router.push("/signboard/lock");
   };
 
   const handleExam = (applicationId: number) => {
     router.push(`/signboard/lock/exam/${applicationId}`);
+  };
+
+  const handlePracticeExam = (applicationId: number) => {
+    router.push(`/signboard/lock/practice/${applicationId}`);
   };
 
   return (
@@ -204,9 +206,19 @@ export default function LockQueryPage() {
                     学习&考试
                   </Button>
                 )}
+                {canApplyPracticeExam(app.status) && (
+                  <Button
+                    variant="ghost"
+                    className="rounded-none py-6 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                    onClick={() => handlePracticeExam(app.id)}
+                  >
+                    <Wrench className="w-4 h-4 mr-2" />
+                    实操考核
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
-                  className={`rounded-none py-6 hover:bg-gray-50 ${!canTakeExam(app.status) ? 'col-span-2' : ''}`}
+                  className={`rounded-none py-6 hover:bg-gray-50 ${!canTakeExam(app.status) && !canApplyPracticeExam(app.status) ? 'col-span-2' : ''}`}
                   onClick={() => toggleExpand(app.id)}
                 >
                   <FileText className="w-4 h-4 mr-2" />

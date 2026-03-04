@@ -31,10 +31,10 @@ import {
 } from "./query/api";
 
 // React Query hooks
-const useApprovers = (module?: string, role?: string) => {
+const useApprovers = () => {
   return useQuery({
-    queryKey: ["systemApprovers", module, role],
-    queryFn: () => getApprovers(module, role),
+    queryKey: ["systemApprovers"],
+    queryFn: () => getApprovers(),
   });
 };
 
@@ -72,28 +72,6 @@ const useDeleteApprover = () => {
   });
 };
 
-// 预定义的模块和角色选项
-const MODULE_OPTIONS = [
-  { value: "lock", label: "锁具模块" },
-  { value: "energy", label: "能源模块" },
-  { value: "safety", label: "安全模块" },
-];
-
-const ROLE_OPTIONS: Record<string, { value: string; label: string }[]> = {
-  lock: [
-    { value: "safety", label: "安环部审批" },
-    { value: "manager", label: "部门长审批" },
-  ],
-  energy: [
-    { value: "safety", label: "安环部审批" },
-    { value: "manager", label: "部门长审批" },
-  ],
-  safety: [
-    { value: "safety", label: "安环部审批" },
-    { value: "manager", label: "部门长审批" },
-  ],
-};
-
 // 审批人员表单组件
 function ApproverDialog({
   open,
@@ -109,8 +87,6 @@ function ApproverDialog({
   const [formData, setFormData] = useState({
     name: "",
     no: "",
-    module: "lock",
-    role: "safety",
     status: 1,
   });
 
@@ -119,16 +95,12 @@ function ApproverDialog({
       setFormData({
         name: approver.name || "",
         no: approver.no || "",
-        module: approver.module || "lock",
-        role: approver.role || "safety",
         status: approver.status || 1,
       });
     } else {
       setFormData({
         name: "",
         no: "",
-        module: "lock",
-        role: "safety",
         status: 1,
       });
     }
@@ -138,8 +110,6 @@ function ApproverDialog({
     onSubmit(formData);
     onOpenChange(false);
   };
-
-  const currentRoleOptions = ROLE_OPTIONS[formData.module] || [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -164,36 +134,6 @@ function ApproverDialog({
               onChange={(e) => setFormData({ ...formData, no: e.target.value })}
               placeholder="请输入工号"
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label>模块 *</Label>
-            <select
-              className="w-full h-10 px-3 border rounded-md"
-              value={formData.module}
-              onChange={(e) => setFormData({ ...formData, module: e.target.value, role: ROLE_OPTIONS[e.target.value]?.[0]?.value || "" })}
-            >
-              {MODULE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>角色 *</Label>
-            <select
-              className="w-full h-10 px-3 border rounded-md"
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-            >
-              {currentRoleOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
           </div>
 
           <div className="space-y-2">
@@ -251,14 +191,6 @@ export default function SystemApproverPage() {
     setEditingApprover(undefined);
   };
 
-  const getModuleLabel = (module: string) => {
-    return MODULE_OPTIONS.find((m) => m.value === module)?.label || module;
-  };
-
-  const getRoleLabel = (module: string, role: string) => {
-    return ROLE_OPTIONS[module]?.find((r) => r.value === role)?.label || role;
-  };
-
   return (
     <div className="container mx-auto py-6">
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
@@ -283,8 +215,6 @@ export default function SystemApproverPage() {
               <TableRow>
                 <TableHead>姓名</TableHead>
                 <TableHead>工号</TableHead>
-                <TableHead>模块</TableHead>
-                <TableHead>角色</TableHead>
                 <TableHead>状态</TableHead>
                 <TableHead>操作</TableHead>
               </TableRow>
@@ -292,7 +222,7 @@ export default function SystemApproverPage() {
             <TableBody>
               {!approvers || approvers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-gray-500">
+                  <TableCell colSpan={4} className="text-center text-gray-500">
                     暂无数据
                   </TableCell>
                 </TableRow>
@@ -301,8 +231,6 @@ export default function SystemApproverPage() {
                   <TableRow key={approver.id}>
                     <TableCell>{approver.name}</TableCell>
                     <TableCell>{approver.no}</TableCell>
-                    <TableCell>{getModuleLabel(approver.module)}</TableCell>
-                    <TableCell>{getRoleLabel(approver.module, approver.role)}</TableCell>
                     <TableCell>{approver.status === 1 ? "启用" : "禁用"}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">

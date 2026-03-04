@@ -9,50 +9,84 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import CustomPagination from "@/components/CustomPagination";
-import { useAllLockDetails } from "@/features/lock/lockApplication/query";
+import { useLockInventory, useLockTypeOptions, useDepartmentOptions } from "@/features/lock/lockInventory/query";
 import useInfoStore from "@/stores/useUserInfo";
 
-const STATUS_MAP: Record<string, string> = {
-  submitted: "待组长审批",
-  approval_l1: "待部门长审批",
-  approval_l2: "待安环部审批",
-  approval_l3: "待考试",
-  exam_eligible: "待考试",
-  exam_passed: "待登记审批",
-  registration: "待登记审批",
-  registered: "已登记入库",
-  rejected: "已驳回",
-};
-
-interface LockDetail {
+interface LockInventoryItem {
   id: number;
-  applicationCode: string;
+  lockNumber: string;
   lockType: string;
-  specification?: string;
-  quantity: number;
-  purpose?: string;
-  holderName?: string;
-  holderNo?: string;
-  applicationDate?: string;
-  applicationStatus?: string;
+  holderName: string;
+  holderNo: string;
+  department: string;
+  applicationCode: string;
+  status: string;
+  registerTime: string;
 }
+
+const LOCK_STATUS_MAP: Record<string, string> = {
+  in_use: "使用中",
+  returned: "已归还",
+  scrapped: "已报废",
+};
 
 export default function LockInventoryPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
 
-  const { permissions } = useInfoStore();
-
-  const { data, isLoading, isError } = useAllLockDetails({
-    page,
-    pageSize,
+  // Search params
+  const [searchParams, setSearchParams] = useState({
+    lockType: "",
+    department: "",
+    holderName: "",
+    lockNumber: "",
   });
 
-  const lockList = data?.data?.data ?? [];
+  const { permissions } = useInfoStore();
+
+  // Fetch filter options
+  const { data: typeOptions } = useLockTypeOptions();
+  const { data: departmentOptions } = useDepartmentOptions();
+
+  // Fetch inventory data
+  const { data, isLoading, isError, refetch } = useLockInventory({
+    page,
+    pageSize,
+    lockType: searchParams.lockType || undefined,
+    department: searchParams.department || undefined,
+    holderName: searchParams.holderName || undefined,
+    lockNumber: searchParams.lockNumber || undefined,
+  });
+
+  const lockList = data ?? [];
 
   // Check if user has permission
   const hasPermission = permissions.includes("LOCK_VIEW_ALL");
+
+  const handleSearch = () => {
+    setPage(1);
+    refetch();
+  };
+
+  const handleReset = () => {
+    setSearchParams({
+      lockType: "",
+      department: "",
+      holderName: "",
+      lockNumber: "",
+    });
+    setPage(1);
+  };
 
   if (!hasPermission) {
     return (
@@ -67,7 +101,77 @@ export default function LockInventoryPage() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Search Form */}
+      <div className="bg-white p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block">锁具类别</label>
+            <Select
+              value={searchParams.lockType}
+              onValueChange={(value) => setSearchParams({ ...searchParams, lockType: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="请选择类别" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部</SelectItem>
+                {typeOptions?.map((type: string) => (
+                  <SelectItem key={type} value={type}>
+                    {type === "red" ? "红锁" : type === "yellow" ? "黄锁" : type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
+          <div>
+            <label className="text-sm font-medium mb-1 block">部门</label>
+            <Select
+              value={searchParams.department}
+              onValueChange={(value) => setSearchParams({ ...searchParams, department: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="请选择部门" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部</SelectItem>
+                {departmentOptions?.map((dept: string) => (
+                  <SelectItem key={dept} value={dept}>
+                    {dept}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-1 block">持有人</label>
+            <Input
+              placeholder="请输入持有人姓名"
+              value={searchParams.holderName}
+              onChange={(e) => setSearchParams({ ...searchParams, holderName: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-1 block">锁具编号</label>
+            <Input
+              placeholder="请输入锁具编号"
+              value={searchParams.lockNumber}
+              onChange={(e) => setSearchParams({ ...searchParams, lockNumber: e.target.value })}
+            />
+          </div>
+
+          <div className="flex items-end gap-2">
+            <Button onClick={handleSearch}>搜索</Button>
+            <Button variant="outline" onClick={handleReset}>
+              重置
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
       {isLoading ? (
         <div className="py-10 text-center">加载中...</div>
       ) : isError ? (
@@ -77,39 +181,46 @@ export default function LockInventoryPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>申请单号</TableHead>
-                <TableHead>锁具类型</TableHead>
-                <TableHead>规格型号</TableHead>
-                <TableHead>数量</TableHead>
-                <TableHead>用途说明</TableHead>
+                <TableHead>锁具编号</TableHead>
+                <TableHead>锁具类别</TableHead>
+                <TableHead>部门</TableHead>
                 <TableHead>持有人</TableHead>
-                <TableHead>持有人工号</TableHead>
-                <TableHead>申请日期</TableHead>
-                <TableHead>申请状态</TableHead>
+                <TableHead>工号</TableHead>
+                <TableHead>申请单号</TableHead>
+                <TableHead>登记时间</TableHead>
+                <TableHead>状态</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {lockList.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     暂无锁具记录
                   </TableCell>
                 </TableRow>
               ) : (
-                lockList.map((lock: LockDetail) => (
+                lockList.map((lock: LockInventoryItem) => (
                   <TableRow key={lock.id}>
-                    <TableCell>{lock.applicationCode}</TableCell>
-                    <TableCell>{lock.lockType}</TableCell>
-                    <TableCell>{lock.specification || "-"}</TableCell>
-                    <TableCell>{lock.quantity}</TableCell>
-                    <TableCell>{lock.purpose || "-"}</TableCell>
-                    <TableCell>{lock.holderName || "-"}</TableCell>
-                    <TableCell>{lock.holderNo || "-"}</TableCell>
-                    <TableCell>{lock.applicationDate || "-"}</TableCell>
+                    <TableCell>{lock.lockNumber}</TableCell>
                     <TableCell>
-                      {lock.applicationStatus
-                        ? STATUS_MAP[lock.applicationStatus] || lock.applicationStatus
-                        : "-"}
+                      {lock.lockType === "red" ? "红锁" : lock.lockType === "yellow" ? "黄锁" : lock.lockType}
+                    </TableCell>
+                    <TableCell>{lock.department}</TableCell>
+                    <TableCell>{lock.holderName}</TableCell>
+                    <TableCell>{lock.holderNo}</TableCell>
+                    <TableCell>{lock.applicationCode}</TableCell>
+                    <TableCell>{lock.registerTime ? lock.registerTime.slice(0, 10) : "-"}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${lock.status === "in_use"
+                          ? "bg-green-100 text-green-800"
+                          : lock.status === "returned"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
+                          }`}
+                      >
+                        {LOCK_STATUS_MAP[lock.status] || lock.status}
+                      </span>
                     </TableCell>
                   </TableRow>
                 ))
@@ -120,7 +231,7 @@ export default function LockInventoryPage() {
           <CustomPagination
             page={page}
             pageSize={pageSize}
-            total={data?.data?.total || 0}
+            total={data?.total || 0}
             onChange={setPage}
             className="mt-4 justify-end"
           />

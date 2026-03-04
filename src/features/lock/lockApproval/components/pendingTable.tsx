@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { LOCK_STATUS_TEXT } from "@/config/lock-status";
 
 interface LockApplication {
   id: number;
@@ -18,6 +19,9 @@ interface LockApplication {
   department: string;
   phone: string;
   applyUnit: string;
+  productionLine?: string;
+  process?: string;
+  team?: string;
   status: string;
   currentApprovalLevel: number;
   applicationTime: string;
@@ -28,18 +32,6 @@ interface PendingApprovalTableProps {
   onView: (application: LockApplication) => void;
   selectedId?: number | null;
 }
-
-const STATUS_MAP: Record<string, string> = {
-  submitted: "待组长审批",        // 等待组长审批
-  approval_l1: "待部门长审批",    // 组长已通过，等待部门长审批
-  approval_l2: "待安环部审批",    // 部门长已通过，等待安环部审批
-  approval_l3: "待考试",          // 安环部已通过，等待考试
-  exam_eligible: "待考试",        // 可以参加考试
-  exam_passed: "待登记审批",      // 考试通过，等待登记审批
-  registration: "待登记审批",     // 等待登记审批
-  registered: "已登记入库",       // 已完成
-  rejected: "已驳回",             // 已驳回
-};
 
 export default function PendingApprovalTable({
   data,
@@ -78,8 +70,8 @@ export default function PendingApprovalTable({
               <TableCell>{app.applicationCode}</TableCell>
               <TableCell>{app.applicantName}</TableCell>
               <TableCell>{app.department}</TableCell>
-              <TableCell>{app.applyUnit}</TableCell>
-              <TableCell>{STATUS_MAP[app.status] || app.status}</TableCell>
+              <TableCell>{[app.productionLine, app.process, app.team].filter(Boolean).join(" / ") || "-"}</TableCell>
+              <TableCell>{LOCK_STATUS_TEXT[app.status as keyof typeof LOCK_STATUS_TEXT] || app.status}</TableCell>
               <TableCell>{app.applicationTime}</TableCell>
               <TableCell>
                 <Button variant="outline" size="sm" onClick={() => onView(app)}>

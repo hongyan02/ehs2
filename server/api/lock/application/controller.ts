@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { z } from "zod";
-import { getLockApplications, getLockApplicationById, createLockApplication, updateLockApplication, getMyApplications, getAllApplications, getAllLockDetails, getApplicationsByEmployeeNo } from "./services";
+import { getLockApplications, getLockApplicationById, createLockApplication, updateLockApplication, getMyApplications, getAllApplications, getAllLockDetails, getApplicationsByEmployeeNo, getPracticeEligibleApplications, generateLockNumber } from "./services";
 
 // Query schema
 const querySchema = z.object({
@@ -13,6 +13,23 @@ const querySchema = z.object({
     .optional()
     .transform((val) => (val ? parseInt(val, 10) : 10)),
   status: z.string().optional(),
+});
+
+// Practice eligible query schema
+const practiceEligibleQuerySchema = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 1)),
+  pageSize: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 10)),
+  applicantName: z.string().optional(),
+  applicantNo: z.string().optional(),
+  department: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
 });
 
 // Create schema
@@ -233,5 +250,43 @@ export const queryByEmployeeNoController = async (c: Context) => {
   } catch (error) {
     console.error("queryByEmployeeNoController error:", error);
     return c.json({ success: false, message: "服务器错误" }, 500);
+  }
+};
+
+// Get practice eligible applications (待实操考核)
+export const getPracticeEligibleController = async (c: Context) => {
+  try {
+    const params = practiceEligibleQuerySchema.parse(c.req.query());
+    const result = await getPracticeEligibleApplications(params);
+    return c.json({ success: true, data: result });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ success: false, message: error.issues }, 400);
+    }
+    console.error("getPracticeEligibleController error:", error);
+    return c.json({ success: false, message: "服务器错误" }, 500);
+  }
+};
+
+// Generate lock number schema
+const generateLockNumberSchema = z.object({
+  processName: z.string(),
+  lockType: z.enum(["red", "yellow"]),
+});
+
+// Generate lock number controller
+export const generateLockNumberController = async (c: Context) => {
+  try {
+    const body = await c.req.json();
+    const validated = generateLockNumberSchema.parse(body);
+
+    const result = await generateLockNumber(validated.processName, validated.lockType);
+    return c.json({ success: true, data: result });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ success: false, message: error.issues }, 400);
+    }
+    console.error("generateLockNumberController error:", error);
+    return c.json({ success: false, message: error instanceof Error ? error.message : "服务器错误" }, 500);
   }
 };

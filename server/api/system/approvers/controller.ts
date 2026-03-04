@@ -11,23 +11,17 @@ import {
 const createApproverSchema = z.object({
   name: z.string().min(1),
   no: z.string().min(1),
-  module: z.string().min(1),
-  role: z.string().min(1),
   status: z.number().optional(),
 });
 
 const updateApproverSchema = z.object({
   name: z.string().min(1).optional(),
   no: z.string().min(1).optional(),
-  module: z.string().min(1).optional(),
-  role: z.string().min(1).optional(),
   status: z.number().optional(),
 });
 
 export const getApproversController = async (c: Context) => {
-  const module = c.req.query("module");
-  const role = c.req.query("role");
-  const approvers = await getApprovers(module || undefined, role || undefined);
+  const approvers = await getApprovers();
   return c.json({ success: true, data: approvers });
 };
 

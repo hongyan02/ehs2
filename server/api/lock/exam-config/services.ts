@@ -21,6 +21,7 @@ export async function getAllExamConfigs() {
 export async function createExamConfig(data: {
   courseUrl?: string;
   passingScore?: number;
+  practiceFileUrl?: string;
   status?: number;
   remark?: string;
 }) {
@@ -44,6 +45,7 @@ export async function updateExamConfig(
   data: {
     courseUrl?: string;
     passingScore?: number;
+    practiceFileUrl?: string;
     status?: number;
     remark?: string;
   }
@@ -63,6 +65,7 @@ export async function updateExamConfig(
 export async function saveExamConfig(data: {
   courseUrl?: string;
   passingScore?: number;
+  practiceFileUrl?: string;
   remark?: string;
 }) {
   const existing = await getExamConfig();
@@ -70,4 +73,23 @@ export async function saveExamConfig(data: {
     return updateExamConfig(existing.id, data);
   }
   return createExamConfig(data);
+}
+
+// 上传实操考核文件
+export async function uploadPracticeFile(file: {
+  url: string;
+  filename: string;
+}) {
+  const existing = await getExamConfig();
+  if (existing) {
+    // 更新现有配置
+    return updateExamConfig(existing.id, {
+      practiceFileUrl: file.url,
+    });
+  } else {
+    // 创建新配置
+    return createExamConfig({
+      practiceFileUrl: file.url,
+    });
+  }
 }

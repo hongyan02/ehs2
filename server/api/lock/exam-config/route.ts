@@ -6,6 +6,7 @@ import {
   getExamConfigController,
   getAllExamConfigsController,
   saveExamConfigController,
+  uploadPracticeFileController,
 } from "./controller";
 
 const route = new Hono();
@@ -14,7 +15,10 @@ const route = new Hono();
 route.get("/", anonymousAccessMiddleware, getExamConfigController);
 
 // 需要管理员权限
-route.get("/all", authMiddleware, requirePermission("ADMIN"), getAllExamConfigsController);
-route.post("/", authMiddleware, requirePermission("ADMIN"), saveExamConfigController);
+route.get("/all", authMiddleware, requirePermission("LOCK_VIEW_ALL"), getAllExamConfigsController);
+route.post("/", authMiddleware, requirePermission("LOCK_VIEW_ALL"), saveExamConfigController);
+
+// 上传实操考核文件
+route.post("/practice-file", authMiddleware, requirePermission("LOCK_VIEW_ALL"), uploadPracticeFileController);
 
 export default route;

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { useApprovalHistory, useLockApplication } from "../query";
 import { Timeline } from "@/features/lock/components/Timeline";
+import { LOCK_STATUS_TEXT } from "@/config/lock-status";
 
 interface LockApplication {
   id: number;
@@ -45,18 +46,6 @@ interface ApprovalDialogProps {
   onReject: (comment?: string) => void;
   isActionPending?: boolean;
 }
-
-const STATUS_MAP: Record<string, string> = {
-  submitted: "待组长审批",
-  approval_l1: "组长审批中",
-  approval_l2: "部门长审批中",
-  approval_l3: "安环部审批中",
-  exam_eligible: "可参加考试",
-  exam_passed: "考试通过",
-  registration: "登记表审批中",
-  registered: "已登记入库",
-  rejected: "已驳回",
-};
 
 export default function ApprovalDialog({
   open,
@@ -131,7 +120,7 @@ export default function ApprovalDialog({
               </div>
               <div>
                 <span className="text-gray-500">状态：</span>
-                {STATUS_MAP[application.status]}
+                {LOCK_STATUS_TEXT[application.status as keyof typeof LOCK_STATUS_TEXT] || application.status}
               </div>
             </div>
           </div>

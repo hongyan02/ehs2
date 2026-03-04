@@ -15,18 +15,7 @@ import CustomPagination from "@/components/CustomPagination";
 import { useMyApplications } from "@/features/lock/lockApplication/query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Timeline } from "@/features/lock/components/Timeline";
-
-const STATUS_MAP: Record<string, string> = {
-  submitted: "待组长审批",
-  approval_l1: "待部门长审批",
-  approval_l2: "待安环部审批",
-  approval_l3: "待考试",
-  exam_eligible: "待考试",
-  exam_passed: "待登记审批",
-  registration: "待登记审批",
-  registered: "已登记入库",
-  rejected: "已驳回",
-};
+import { LOCK_STATUS_TEXT, LOCK_STATUS_COLORS } from "@/config/lock-status";
 
 interface Application {
   id: number;
@@ -85,20 +74,9 @@ export default function LockMyApplicationPage() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusColors: Record<string, string> = {
-      submitted: "bg-blue-100 text-blue-800",
-      approval_l1: "bg-yellow-100 text-yellow-800",
-      approval_l2: "bg-orange-100 text-orange-800",
-      approval_l3: "bg-purple-100 text-purple-800",
-      exam_eligible: "bg-purple-100 text-purple-800",
-      exam_passed: "bg-cyan-100 text-cyan-800",
-      registration: "bg-cyan-100 text-cyan-800",
-      registered: "bg-green-100 text-green-800",
-      rejected: "bg-red-100 text-red-800",
-    };
     return (
-      <Badge className={statusColors[status] || "bg-gray-100"}>
-        {STATUS_MAP[status] || status}
+      <Badge className={LOCK_STATUS_COLORS[status as keyof typeof LOCK_STATUS_COLORS] || "bg-gray-100"}>
+        {LOCK_STATUS_TEXT[status as keyof typeof LOCK_STATUS_TEXT] || status}
       </Badge>
     );
   };

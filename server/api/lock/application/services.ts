@@ -1,6 +1,6 @@
 import { db } from "../../../db/db";
-import { lockApplication, lockApplicationDetail, lockApproval, examResult } from "../../../db/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { lockApplication, lockApproval, examResult, lockConfig, lockInventory } from "../../../db/schema";
+import { eq, desc, and, sql, like } from "drizzle-orm";
 
 export async function getLockApplications(params?: {
   page?: number;
@@ -115,8 +115,8 @@ export async function getAllApplications(params?: {
     applications.map(async (app) => {
       const details = await db
         .select()
-        .from(lockApplicationDetail)
-        .where(eq(lockApplicationDetail.applicationCode, app.applicationCode));
+        .from(lockInventory)
+        .where(eq(lockInventory.applicationCode, app.applicationCode));
 
       const approvals = await db
         .select()
@@ -160,8 +160,8 @@ export async function getAllLockDetails(params?: {
   // Get all lock details with application info
   const details = await db
     .select()
-    .from(lockApplicationDetail)
-    .orderBy(desc(lockApplicationDetail.id));
+    .from(lockInventory)
+    .orderBy(desc(lockInventory.id));
 
   // Get application info for each detail
   const detailsWithHolder = await Promise.all(
@@ -203,8 +203,8 @@ export async function getApplicationsByEmployeeNo(employeeNo: string) {
     applications.map(async (app) => {
       const details = await db
         .select()
-        .from(lockApplicationDetail)
-        .where(eq(lockApplicationDetail.applicationCode, app.applicationCode));
+        .from(lockInventory)
+        .where(eq(lockInventory.applicationCode, app.applicationCode));
 
       const approvals = await db
         .select()
@@ -237,8 +237,8 @@ export async function getLockApplicationById(id: number) {
     return null;
   }
 
-  const details = await db.query.lockApplicationDetail.findMany({
-    where: eq(lockApplicationDetail.applicationCode, application.applicationCode),
+  const details = await db.query.lockInventory.findMany({
+    where: eq(lockInventory.applicationCode, application.applicationCode),
   });
 
   return {
@@ -296,4 +296,116 @@ export async function getLockApplicationByCode(applicationCode: string) {
   return await db.query.lockApplication.findFirst({
     where: eq(lockApplication.applicationCode, applicationCode),
   });
+}
+
+// Get applications with practice_applying status (已申请实操考核，待实操考核)
+export async function getPracticeEligibleApplications(params?: {
+  page?: number;
+  pageSize?: number;
+  applicantName?: string;
+  applicantNo?: string;
+  department?: string;
+  startDate?: string;
+  endDate?: string;
+}) {
+  const page = params?.page || 1;
+  const pageSize = params?.pageSize || 10;
+  const offset = (page - 1) * pageSize;
+
+  const conditions = [eq(lockApplication.status, "practice_applying")];
+
+  if (params?.applicantName) {
+    conditions.push(sql`${lockApplication.applicantName} LIKE ${'%' + params.applicantName + '%'}`);
+  }
+  if (params?.applicantNo) {
+    conditions.push(sql`${lockApplication.applicantNo} LIKE ${'%' + params.applicantNo + '%'}`);
+  }
+  if (params?.department) {
+    conditions.push(eq(lockApplication.department, params.department));
+  }
+  if (params?.startDate) {
+    conditions.push(sql`${lockApplication.applicationTime} >= ${params.startDate}`);
+  }
+  if (params?.endDate) {
+    conditions.push(sql`${lockApplication.applicationTime} <= ${params.endDate + ' 23:59:59'}`);
+  }
+
+  const whereClause = and(...conditions);
+
+  // Get total count
+  const countResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(lockApplication)
+    .where(whereClause);
+  const total = countResult[0]?.count || 0;
+
+  const applications = await db
+    .select()
+    .from(lockApplication)
+    .where(whereClause)
+    .orderBy(desc(lockApplication.id))
+    .limit(pageSize)
+    .offset(offset);
+
+  // Get exam result for each application
+  const applicationsWithExam = await Promise.all(
+    applications.map(async (app) => {
+      const examRec = await db.query.examResult.findFirst({
+        where: eq(examResult.applicationId, app.id),
+      });
+      return { ...app, examResult: examRec || null };
+    })
+  );
+
+  return {
+    data: applicationsWithExam,
+    total,
+    page,
+    pageSize,
+  };
+}
+
+// Generate lock number for a process
+// Format: processCode-X (e.g., "A-1", "A-2", "B-1")
+export async function generateLockNumber(processName: string, lockType: "red" | "yellow") {
+  // Get process config to find the code
+  const processConfig = await db.query.lockConfig.findFirst({
+    where: and(
+      eq(lockConfig.type, "process"),
+      eq(lockConfig.name, processName)
+    ),
+  });
+
+  if (!processConfig || !processConfig.code) {
+    throw new Error("未找到工序配置或工序编码");
+  }
+
+  const processCode = processConfig.code;
+
+  // Find existing lock numbers for this process
+  // Lock numbers are stored as processCode-XXX in lockInventory
+  const existingLocks = await db
+    .select()
+    .from(lockInventory)
+    .where(like(lockInventory.lockNumber, `${processCode}-%`));
+
+  // Find the maximum sequence number
+  let maxSeq = 0;
+  for (const lock of existingLocks) {
+    if (lock.lockNumber) {
+      const match = lock.lockNumber.match(/-(\d+)$/);
+      if (match) {
+        const seq = parseInt(match[1], 10);
+        if (seq > maxSeq) {
+          maxSeq = seq;
+        }
+      }
+    }
+  }
+
+  // Generate new lock number
+  const newSeq = maxSeq + 1;
+  const lockNumber = `${processCode}-${newSeq}`;
+
+  return { lockNumber, processCode, sequence: newSeq };
 }

@@ -29,7 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Settings2, GraduationCap, Loader2, Users, Building2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Settings2, GraduationCap, Loader2, Users, Building2, Upload, FileText, Download } from "lucide-react";
+import { useRef } from "react";
 import {
   useLockConfigs,
   useCreateLockConfig,
@@ -37,6 +38,7 @@ import {
   useDeleteLockConfig,
   useExamConfig,
   useSaveExamConfig,
+  useUploadPracticeFile,
   type LockConfig,
 } from "./query";
 
@@ -691,6 +693,8 @@ function ProcessTeamConfigTab() {
 function ExamConfigTab() {
   const { data: config, isLoading } = useExamConfig();
   const saveMutation = useSaveExamConfig();
+  const uploadMutation = useUploadPracticeFile();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -719,6 +723,19 @@ function ExamConfigTab() {
         setIsEditing(false);
       },
     });
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadMutation.mutate(file);
+    }
+  };
+
+  const handleDownload = () => {
+    if (config?.practiceFileUrl) {
+      window.open(config.practiceFileUrl, "_blank");
+    }
   };
 
   if (isLoading) {
@@ -842,6 +859,44 @@ function ExamConfigTab() {
           </div>
         </form>
       )}
+
+      {/* 实操考核文件上传区域 */}
+      <div className="mt-8 pt-6 border-t">
+        <h4 className="font-medium mb-4">实操考核文件</h4>
+        <div className="flex items-center gap-4">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadMutation.isPending}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            {uploadMutation.isPending ? "上传中..." : "上传文件"}
+          </Button>
+
+          {config?.practiceFileUrl && (
+            <Button variant="outline" onClick={handleDownload}>
+              <Download className="w-4 h-4 mr-2" />
+              下载当前文件
+            </Button>
+          )}
+        </div>
+        <p className="text-sm text-gray-500 mt-2">
+          支持 PDF、Word、Excel、图片格式，文件大小不超过 20MB
+        </p>
+        {config?.practiceFileUrl && (
+          <p className="text-sm text-green-600 mt-2 flex items-center">
+            <FileText className="w-4 h-4 mr-1" />
+            已上传文件
+          </p>
+        )}
+      </div>
     </div>
   );
 }

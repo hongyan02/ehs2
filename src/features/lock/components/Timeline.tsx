@@ -1,6 +1,10 @@
 "use client";
 
-import { Circle, GraduationCap, ClipboardList, UserCheck, Building2, Shield, FileCheck } from "lucide-react";
+import { Circle, GraduationCap, ClipboardList, UserCheck, Building2, Shield, FileCheck, Wrench } from "lucide-react";
+import {
+  LOCK_APPLICATION_STATUS,
+  LOCK_STATUS_TEXT,
+} from "@/config/lock-status";
 
 interface ApprovalHistory {
   id: number;
@@ -43,22 +47,25 @@ interface TimelineProps {
 // 根据状态获取当前审批层级
 function getCurrentLevelFromStatus(status: string): number {
   switch (status) {
-    case "submitted":
-    case "approval_l1":
+    case LOCK_APPLICATION_STATUS.SUBMITTED:
+    case LOCK_APPLICATION_STATUS.APPROVAL_L1:
       return 1; // 组长审批中
-    case "approval_l2":
+    case LOCK_APPLICATION_STATUS.APPROVAL_L2:
       return 2; // 部门长审批中
-    case "approval_l3":
+    case LOCK_APPLICATION_STATUS.APPROVAL_L3:
       return 3; // 安环部审批中
-    case "exam_eligible":
+    case LOCK_APPLICATION_STATUS.EXAM_ELIGIBLE:
       return 4; // 学习考试中
-    case "exam_passed":
-      return 5; // 考试通过，待登记审批
-    case "registration":
-      return 6; // 登记审批中
-    case "registered":
-      return 7; // 已登记入库
-    case "rejected":
+    case LOCK_APPLICATION_STATUS.EXAM_PASSED:
+    case LOCK_APPLICATION_STATUS.PRACTICE_ELIGIBLE:
+      return 5; // 考试通过，可申请实操考核
+    case LOCK_APPLICATION_STATUS.PRACTICE_PASSED:
+      return 6; // 实操考核通过，待登记审批
+    case LOCK_APPLICATION_STATUS.REGISTRATION:
+      return 7; // 登记审批中
+    case LOCK_APPLICATION_STATUS.REGISTERED:
+      return 8; // 已登记入库
+    case LOCK_APPLICATION_STATUS.REJECTED:
       return -1; // 已驳回
     default:
       return 0;
@@ -147,8 +154,8 @@ export function Timeline({ approvalHistory, examResult, status, applicationTime,
 
     // 5. 学习&考试
     const examStatus: "pending" | "current" | "completed" | "rejected" =
-      appStatus === "exam_eligible" ? "current" :
-      ["exam_passed", "registration", "registered"].includes(appStatus) ? "completed" :
+      appStatus === LOCK_APPLICATION_STATUS.EXAM_ELIGIBLE ? "current" :
+      [LOCK_APPLICATION_STATUS.EXAM_PASSED, LOCK_APPLICATION_STATUS.PRACTICE_ELIGIBLE, LOCK_APPLICATION_STATUS.PRACTICE_PASSED, LOCK_APPLICATION_STATUS.REGISTRATION, LOCK_APPLICATION_STATUS.REGISTERED].includes(appStatus as any) ? "completed" :
       rejectedLevel ? "pending" :
       "pending";
     steps.push({
@@ -160,14 +167,27 @@ export function Timeline({ approvalHistory, examResult, status, applicationTime,
       time: examResult?.examDate,
     });
 
-    // 6. 锁具登记审批
+    // 6. 实操考核
+    const practiceStatus: "pending" | "current" | "completed" | "rejected" =
+      appStatus === LOCK_APPLICATION_STATUS.PRACTICE_ELIGIBLE ? "current" :
+      [LOCK_APPLICATION_STATUS.PRACTICE_PASSED, LOCK_APPLICATION_STATUS.REGISTRATION, LOCK_APPLICATION_STATUS.REGISTERED].includes(appStatus as any) ? "completed" :
+      rejectedLevel ? "pending" :
+      "pending";
+    steps.push({
+      id: "practice",
+      name: "实操考核",
+      icon: <Wrench className="w-5 h-5" />,
+      status: practiceStatus,
+    });
+
+    // 7. 锁具登记审批
     const regApproval = approvalHistory.find(h => h.approvalLevel === 4);
     const regStatus: "pending" | "current" | "completed" | "rejected" =
       regApproval?.status === "reject" || regApproval?.status === "rejected" ? "rejected" :
       regApproval?.status === "approve" ? "completed" :
-      appStatus === "registration" ? "current" :
+      appStatus === LOCK_APPLICATION_STATUS.REGISTRATION ? "current" :
       rejectedLevel ? "pending" :
-      ["exam_passed", "registration", "registered"].includes(appStatus) ? "completed" :
+      [LOCK_APPLICATION_STATUS.PRACTICE_PASSED, LOCK_APPLICATION_STATUS.REGISTRATION, LOCK_APPLICATION_STATUS.REGISTERED].includes(appStatus as any) ? "completed" :
       "pending";
     steps.push({
       id: "registration",
@@ -180,8 +200,8 @@ export function Timeline({ approvalHistory, examResult, status, applicationTime,
       comment: regApproval?.comment,
     });
 
-    // 7. 已登记入库 - 仅在完成时显示
-    if (appStatus === "registered" && !rejectedLevel) {
+    // 8. 已登记入库 - 仅在完成时显示
+    if (appStatus === LOCK_APPLICATION_STATUS.REGISTERED && !rejectedLevel) {
       steps.push({
         id: "registered",
         name: "已登记入库",

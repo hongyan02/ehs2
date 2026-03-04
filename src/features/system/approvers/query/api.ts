@@ -6,18 +6,13 @@ export interface SystemApprover {
   id: number;
   name: string;
   no: string;
-  module: string;
-  role: string;
   status: number;
   createTime: string;
   updateTime: string;
 }
 
-export const getApprovers = async (module?: string, role?: string): Promise<SystemApprover[]> => {
-  const params: Record<string, string> = {};
-  if (module) params.module = module;
-  if (role) params.role = role;
-  const response = await axios.get(`${API_BASE}/system/approvers`, { params });
+export const getApprovers = async (): Promise<SystemApprover[]> => {
+  const response = await axios.get(`${API_BASE}/system/approvers`);
   return response.data.data;
 };
 

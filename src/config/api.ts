@@ -9,13 +9,18 @@ export const API_SERVICE = {
         config: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/config",
         configProcesses: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/config/processes",
         examConfig: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/exam-config",
+        examConfigPracticeFile: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/exam-config/practice-file",
         application: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/application",
         applicationMy: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/application/my",
         applicationAll: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/application/all",
         applicationLocks: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/application/locks",
+        applicationPracticeEligible: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/application/practice-eligible",
+        applicationGenerateLockNumber: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/application/generate-lock-number",
         approval: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/approval",
         approvalPending: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/approval/pending",
         examResult: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/exam/result",
+        examPracticeResult: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/exam/practice-result",
+        inventory: process.env.NEXT_PUBLIC_API_CONFIG_LOCAL + "/lock/inventory",
     },
     //用户信息相关
     userInfo: {
