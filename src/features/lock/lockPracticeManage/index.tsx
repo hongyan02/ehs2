@@ -3,14 +3,17 @@
 import { useState, useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { PracticeSearchForm } from "./components/PracticeSearchForm";
+import { PracticeRecordSearchForm } from "./components/PracticeRecordSearchForm";
 import { PracticeTable } from "./components/PracticeTable";
+import { PracticeRecordTable } from "./components/PracticeRecordTable";
 import { ScoringDialog } from "./components/ScoringDialog";
 import { LockAssignDialog } from "./components/LockAssignDialog";
-import { usePracticeEligible, useSubmitPracticeResult } from "./query";
+import { usePracticeEligible, useSubmitPracticeResult, usePracticeCompleted } from "./query";
 import { Button } from "@/components/ui/button";
 import CustomPagination from "@/components/CustomPagination";
 import { format } from "date-fns";
 import useInfoStore from "@/stores/useUserInfo";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export interface Application {
   id: number;
@@ -32,7 +35,14 @@ export interface Application {
     practicePassed?: number;
     practiceScore?: number;
     practiceDate?: string;
+    screenshotUrl?: string;
   } | null;
+  lockDetails?: {
+    id: number;
+    lockNumber: string;
+    lockType: string;
+  }[];
+  level2Approver?: string | null;
 }
 
 export default function LockPracticeManage() {
@@ -46,6 +56,17 @@ export default function LockPracticeManage() {
     endDate?: string;
   }>({});
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [completedSelectedIds, setCompletedSelectedIds] = useState<number[]>([]);
+
+  // Practice completed tab state
+  const [completedPage, setCompletedPage] = useState(1);
+  const [completedSearchParams, setCompletedSearchParams] = useState<{
+    applicantName?: string;
+    applicantNo?: string;
+    department?: string;
+    startDate?: string;
+    endDate?: string;
+  }>({});
 
   // Dialog states
   const [scoringOpen, setScoringOpen] = useState(false);
@@ -63,6 +84,12 @@ export default function LockPracticeManage() {
     ...searchParams,
   });
 
+  const { data: completedData, isLoading: completedLoading, refetch: completedRefetch } = usePracticeCompleted({
+    page: completedPage,
+    pageSize,
+    ...completedSearchParams,
+  });
+
   const submitResultMutation = useSubmitPracticeResult();
 
   const hasPermission = permissions.includes("LOCK_VIEW_ALL");
@@ -71,9 +98,18 @@ export default function LockPracticeManage() {
     return data?.data ?? [];
   }, [data]);
 
+  const completedApplicationList = useMemo(() => {
+    return completedData?.data ?? [];
+  }, [completedData]);
+
   const handleSearch = (params: typeof searchParams) => {
     setSearchParams(params);
     setPage(1);
+  };
+
+  const handleCompletedSearch = (params: typeof completedSearchParams) => {
+    setCompletedSearchParams(params);
+    setCompletedPage(1);
   };
 
   const handleScore = (app: Application) => {
@@ -179,6 +215,35 @@ export default function LockPracticeManage() {
     document.body.removeChild(link);
   };
 
+  const handleCompletedExport = async () => {
+    if (completedSelectedIds.length === 0) {
+      alert("请先选择要导出的记录");
+      return;
+    }
+
+    try {
+      // Call backend API to export
+      const { exportPracticeRecords } = await import("./query/api");
+      const response = await exportPracticeRecords(completedSelectedIds);
+
+      // Create blob and download
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `考核记录_${format(new Date(), "yyyyMMdd_HHmmss")}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("导出失败，请重试");
+    }
+  };
+
   if (!hasPermission) {
     return (
       <div className="p-6">
@@ -191,27 +256,61 @@ export default function LockPracticeManage() {
 
   return (
     <div className="p-6 space-y-6">
-      <PracticeSearchForm
-        onSearch={handleSearch}
-        selectedCount={selectedIds.length}
-        onExport={handleExport}
-      />
+      <Tabs defaultValue="pending" className="w-full">
+        <TabsList>
+          <TabsTrigger value="pending">待实操考核</TabsTrigger>
+          <TabsTrigger value="completed">考核记录</TabsTrigger>
+        </TabsList>
 
-      <PracticeTable
-        data={applicationList}
-        selectedIds={selectedIds}
-        onSelectionChange={setSelectedIds}
-        onScore={handleScore}
-        loading={isLoading}
-      />
+        {/* Tab1: 待实操考核 */}
+        <TabsContent value="pending" className="space-y-4 mt-4">
+          <PracticeSearchForm
+            onSearch={handleSearch}
+            selectedCount={selectedIds.length}
+            onExport={handleExport}
+          />
 
-      <CustomPagination
-        page={page}
-        pageSize={pageSize}
-        total={data?.total || 0}
-        onChange={setPage}
-        className="mt-4 justify-end"
-      />
+          <PracticeTable
+            data={applicationList}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
+            onScore={handleScore}
+            loading={isLoading}
+          />
+
+          <CustomPagination
+            page={page}
+            pageSize={pageSize}
+            total={data?.total || 0}
+            onChange={setPage}
+            className="mt-4 justify-end"
+          />
+        </TabsContent>
+
+        {/* Tab2: 考核记录 */}
+        <TabsContent value="completed" className="space-y-4 mt-4">
+          <PracticeRecordSearchForm
+            onSearch={handleCompletedSearch}
+            selectedCount={completedSelectedIds.length}
+            onExport={handleCompletedExport}
+          />
+
+          <PracticeRecordTable
+            data={completedApplicationList}
+            selectedIds={completedSelectedIds}
+            onSelectionChange={setCompletedSelectedIds}
+            loading={completedLoading}
+          />
+
+          <CustomPagination
+            page={completedPage}
+            pageSize={pageSize}
+            total={completedData?.total || 0}
+            onChange={setCompletedPage}
+            className="mt-4 justify-end"
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* 打分对话框 */}
       <ScoringDialog

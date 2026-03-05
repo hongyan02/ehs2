@@ -1,6 +1,6 @@
 import { db } from "../../../db/db";
 import { lockApplication, lockApproval, systemApprover } from "../../../db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import {
   APPROVAL_LEVEL_STATUS,
   APPROVAL_STATUS_MAP,

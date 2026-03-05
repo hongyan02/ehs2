@@ -10,6 +10,7 @@ export async function submitExamResult(
     score: number;
     examDate: string;
     remark: string | null;
+    screenshotUrl: string | null;
     enteredBy: string;
     createTime: string;
   },
@@ -31,6 +32,7 @@ export async function submitExamResult(
         score: exam.score,
         examDate: exam.examDate,
         remark: exam.remark,
+        screenshotUrl: exam.screenshotUrl,
         enteredBy: exam.enteredBy,
       })
       .where(eq(examResult.applicationId, exam.applicationId))

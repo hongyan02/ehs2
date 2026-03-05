@@ -487,8 +487,8 @@ export const lockApproval = sqliteTable("lock_approval", {
   // 审批级别 (1=组长/主管, 2=部门长, 3=安环部, 4=登记审批)
   approvalLevel: integer("approval_level").notNull(),
 
-  // 审批状态
-  status: text("status").notNull(), // pending/approved/rejected
+  // 审批状态 (实际存储值: approve/reject)
+  status: text("status").notNull(), // pending/approve/reject
 
   // 审批人
   approver: text("approver"),
@@ -549,6 +549,9 @@ export const examResult = sqliteTable("exam_result", {
 
   // 分配的锁具数量
   lockQuantity: integer("lock_quantity"),
+
+  // 理论成绩截图URL
+  screenshotUrl: text("screenshot_url"),
 });
 
 // 匿名访问Token表

@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { z } from "zod";
-import { getLockApplications, getLockApplicationById, createLockApplication, updateLockApplication, getMyApplications, getAllApplications, getAllLockDetails, getApplicationsByEmployeeNo, getPracticeEligibleApplications, generateLockNumber } from "./services";
+import { getLockApplications, getLockApplicationById, createLockApplication, updateLockApplication, getMyApplications, getAllApplications, getAllLockDetails, getApplicationsByEmployeeNo, getPracticeEligibleApplications, getPracticeCompletedApplications, generateLockNumber, exportPracticeRecords } from "./services";
 
 // Query schema
 const querySchema = z.object({
@@ -288,5 +288,65 @@ export const generateLockNumberController = async (c: Context) => {
     }
     console.error("generateLockNumberController error:", error);
     return c.json({ success: false, message: error instanceof Error ? error.message : "服务器错误" }, 500);
+  }
+};
+
+// Practice completed query schema
+const practiceCompletedQuerySchema = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 1)),
+  pageSize: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 10)),
+  applicantName: z.string().optional(),
+  applicantNo: z.string().optional(),
+  department: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});
+
+// Get practice completed applications (考核记录 - 已完成实操考核)
+export const getPracticeCompletedController = async (c: Context) => {
+  try {
+    const params = practiceCompletedQuerySchema.parse(c.req.query());
+    const result = await getPracticeCompletedApplications(params);
+    return c.json({ success: true, data: result });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ success: false, message: error.issues }, 400);
+    }
+    console.error("getPracticeCompletedController error:", error);
+    return c.json({ success: false, message: "服务器错误" }, 500);
+  }
+};
+
+// Export practice records schema
+const exportPracticeRecordsSchema = z.object({
+  applicationIds: z.array(z.number()).min(1, "至少选择一条记录"),
+});
+
+// Export practice records controller
+export const exportPracticeRecordsController = async (c: Context) => {
+  try {
+    const body = await c.req.json();
+    const validated = exportPracticeRecordsSchema.parse(body);
+
+    const fileBuffer = await exportPracticeRecords(validated.applicationIds);
+
+    // Set response headers - use ASCII filename to avoid encoding issues
+    const timestamp = Date.now();
+    c.header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    c.header("Content-Disposition", `attachment; filename="practice_records_${timestamp}.xlsx"`);
+
+    return c.body(fileBuffer);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ success: false, message: error.issues }, 400);
+    }
+    console.error("exportPracticeRecordsController error:", error);
+    return c.json({ success: false, message: "导出失败" }, 500);
   }
 };

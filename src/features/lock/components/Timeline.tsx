@@ -59,6 +59,8 @@ function getCurrentLevelFromStatus(status: string): number {
     case LOCK_APPLICATION_STATUS.EXAM_PASSED:
     case LOCK_APPLICATION_STATUS.PRACTICE_ELIGIBLE:
       return 5; // 考试通过，可申请实操考核
+    case LOCK_APPLICATION_STATUS.PRACTICE_APPLYING:
+      return 5; // 申请实操考核中
     case LOCK_APPLICATION_STATUS.PRACTICE_PASSED:
       return 6; // 实操考核通过，待登记审批
     case LOCK_APPLICATION_STATUS.REGISTRATION:
@@ -155,7 +157,7 @@ export function Timeline({ approvalHistory, examResult, status, applicationTime,
     // 5. 学习&考试
     const examStatus: "pending" | "current" | "completed" | "rejected" =
       appStatus === LOCK_APPLICATION_STATUS.EXAM_ELIGIBLE ? "current" :
-      [LOCK_APPLICATION_STATUS.EXAM_PASSED, LOCK_APPLICATION_STATUS.PRACTICE_ELIGIBLE, LOCK_APPLICATION_STATUS.PRACTICE_PASSED, LOCK_APPLICATION_STATUS.REGISTRATION, LOCK_APPLICATION_STATUS.REGISTERED].includes(appStatus as any) ? "completed" :
+      [LOCK_APPLICATION_STATUS.EXAM_PASSED, LOCK_APPLICATION_STATUS.PRACTICE_ELIGIBLE, LOCK_APPLICATION_STATUS.PRACTICE_APPLYING, LOCK_APPLICATION_STATUS.PRACTICE_PASSED, LOCK_APPLICATION_STATUS.REGISTRATION, LOCK_APPLICATION_STATUS.REGISTERED].includes(appStatus as any) ? "completed" :
       rejectedLevel ? "pending" :
       "pending";
     steps.push({
@@ -169,7 +171,7 @@ export function Timeline({ approvalHistory, examResult, status, applicationTime,
 
     // 6. 实操考核
     const practiceStatus: "pending" | "current" | "completed" | "rejected" =
-      appStatus === LOCK_APPLICATION_STATUS.PRACTICE_ELIGIBLE ? "current" :
+      [LOCK_APPLICATION_STATUS.PRACTICE_ELIGIBLE, LOCK_APPLICATION_STATUS.PRACTICE_APPLYING].includes(appStatus as any) ? "current" :
       [LOCK_APPLICATION_STATUS.PRACTICE_PASSED, LOCK_APPLICATION_STATUS.REGISTRATION, LOCK_APPLICATION_STATUS.REGISTERED].includes(appStatus as any) ? "completed" :
       rejectedLevel ? "pending" :
       "pending";

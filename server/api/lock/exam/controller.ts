@@ -9,6 +9,7 @@ const examResultSchema = z.object({
   score: z.number().min(0).max(100),
   examDate: z.string(),
   remark: z.string().optional(),
+  screenshotUrl: z.string().optional(),
 });
 
 // Submit practice result schema
@@ -49,6 +50,7 @@ export const submitExamResultController = async (c: Context) => {
       score: validated.score,
       examDate: validated.examDate,
       remark: validated.remark || null,
+      screenshotUrl: validated.screenshotUrl || null,
       enteredBy: user.employeeId || "UNKNOWN",
       createTime: getCurrentTimeString(),
     };

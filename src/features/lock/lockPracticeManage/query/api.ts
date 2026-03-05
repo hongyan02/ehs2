@@ -11,6 +11,8 @@ export interface PracticeEligibleParams {
   endDate?: string;
 }
 
+export interface PracticeCompletedParams extends PracticeEligibleParams {}
+
 export interface PracticeResultData {
   applicationId: number;
   passed: boolean;
@@ -26,6 +28,10 @@ export function getPracticeEligible(params: PracticeEligibleParams) {
   return request.get(API_SERVICE.lock.applicationPracticeEligible, { params });
 }
 
+export function getPracticeCompleted(params: PracticeCompletedParams) {
+  return request.get(API_SERVICE.lock.applicationPracticeCompleted, { params });
+}
+
 export function submitPracticeResult(data: PracticeResultData) {
   return request.post(API_SERVICE.lock.examPracticeResult, data);
 }
@@ -34,5 +40,13 @@ export function generateLockNumber(processName: string, lockType: "red" | "yello
   return request.post(API_SERVICE.lock.applicationGenerateLockNumber, {
     processName,
     lockType,
+  });
+}
+
+export function exportPracticeRecords(applicationIds: number[]) {
+  return request.post(API_SERVICE.lock.applicationExportPracticeRecords, {
+    applicationIds,
+  }, {
+    responseType: "blob",
   });
 }

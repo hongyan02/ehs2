@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getPracticeEligible, submitPracticeResult, PracticeEligibleParams, PracticeResultData } from "./api";
+import { getPracticeEligible, submitPracticeResult, getPracticeCompleted, PracticeEligibleParams, PracticeResultData, PracticeCompletedParams } from "./api";
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -28,6 +28,17 @@ export const useSubmitPracticeResult = () => {
     onSuccess: () => {
       // Invalidate and refetch practice eligible list
       queryClient.invalidateQueries({ queryKey: ["practiceEligible"] });
+    },
+  });
+};
+
+// Practice completed applications query
+export const usePracticeCompleted = (params: PracticeCompletedParams) => {
+  return useQuery<PaginatedResponse<any>>({
+    queryKey: ["practiceCompleted", params],
+    queryFn: async () => {
+      const res = await getPracticeCompleted(params);
+      return res.data.data;
     },
   });
 };
