@@ -121,7 +121,7 @@ export const createPointPersonController = async (c: Context) => {
 
 export const updatePointPersonController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         const body = await c.req.json();
         const parsed = updatePointPersonSchema.parse(body);
         const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
@@ -138,7 +138,7 @@ export const updatePointPersonController = async (c: Context) => {
 
 export const deletePointPersonController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         await deletePointPerson(id);
         return c.json({ success: true, message: "删除成功" });
     } catch (error) {
@@ -171,7 +171,7 @@ export const createPointCategoryController = async (c: Context) => {
 
 export const updatePointCategoryController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         const body = await c.req.json();
         const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
         const result = await updatePointCategory(id, {
@@ -186,7 +186,7 @@ export const updatePointCategoryController = async (c: Context) => {
 
 export const deletePointCategoryController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         await deletePointCategory(id);
         return c.json({ success: true, message: "删除成功" });
     } catch (error) {
@@ -229,7 +229,7 @@ export const createPointEventController = async (c: Context) => {
 
 export const updatePointEventController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         const body = await c.req.json();
         const parsed = updatePointEventSchema.parse(body);
         const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
@@ -246,7 +246,7 @@ export const updatePointEventController = async (c: Context) => {
 
 export const deletePointEventController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         await deletePointEvent(id);
         return c.json({ success: true, message: "删除成功" });
     } catch (error) {
@@ -304,7 +304,7 @@ export const createPointLogController = async (c: Context) => {
 
 export const deletePointLogController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         const deleted = await deletePointLog(id);
         if (!deleted) {
             return c.json({ success: false, message: "记录不存在" }, 404);

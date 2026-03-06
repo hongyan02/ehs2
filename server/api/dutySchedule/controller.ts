@@ -78,7 +78,7 @@ export const getDutyScheduleController = async (c: Context) => {
 
 export const getDutyScheduleByIdController = async (c: Context) => {
   try {
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(c.req.param("id") || "");
     if (Number.isNaN(id)) {
       return c.json({ success: false, message: "无效的ID" }, 400);
     }
@@ -118,7 +118,7 @@ export const createDutyScheduleController = async (c: Context) => {
 
 export const updateDutyScheduleController = async (c: Context) => {
   try {
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(c.req.param("id") || "");
     if (Number.isNaN(id)) {
       return c.json({ success: false, message: "无效的ID" }, 400);
     }
@@ -155,7 +155,7 @@ export const updateDutyScheduleController = async (c: Context) => {
 
 export const deleteDutyScheduleController = async (c: Context) => {
   try {
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(c.req.param("id") || "");
     if (Number.isNaN(id)) {
       return c.json({ success: false, message: "无效的ID" }, 400);
     }

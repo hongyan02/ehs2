@@ -554,25 +554,6 @@ export const examResult = sqliteTable("exam_result", {
   screenshotUrl: text("screenshot_url"),
 });
 
-// 匿名访问Token表
-export const anonymousToken = sqliteTable("anonymous_token", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-
-  // Token值
-  token: text("token").notNull().unique(),
-
-  // 关联的申请ID（可选）
-  applicationId: integer("application_id"),
-
-  // 到期时间
-  expiresAt: text("expires_at"),
-
-  // 创建时间
-  createTime: text("create_time").notNull(),
-
-  // 更新时间
-  updateTime: text("update_time").notNull(),
-});
 
 // ============================================
 // Lock Module Config Tables

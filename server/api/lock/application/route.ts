@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { anonymousAccessMiddleware } from "../../../middleware/anonymous";
 import { authMiddleware } from "../../../middleware/auth";
 import { requirePermission } from "../../../middleware/auth";
 import {
@@ -20,7 +19,7 @@ import {
 const route = new Hono();
 
 // Public endpoints - anonymous access
-route.post("/", anonymousAccessMiddleware, createApplicationController);
+route.post("/", createApplicationController);
 route.get("/query/:employeeNo", queryByEmployeeNoController);
 
 // Protected endpoints - require authentication

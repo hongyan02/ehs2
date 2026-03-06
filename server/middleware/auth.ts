@@ -21,7 +21,7 @@ export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(
 
         try {
             const jwtSecret = process.env.JWT_SECRET || "default_secret_please_change";
-            const payload = (await verify(token, jwtSecret)) as Record<string, unknown>;
+            const payload = (await verify(token, jwtSecret, "HS256")) as Record<string, unknown>;
 
             const employeeId =
                 (payload.employeeId as string | undefined) ??

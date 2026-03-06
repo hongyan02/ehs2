@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { authMiddleware } from "../../../middleware/auth";
 import { requirePermission } from "../../../middleware/auth";
-import { anonymousAccessMiddleware } from "../../../middleware/anonymous";
 import {
   getExamConfigController,
   getAllExamConfigsController,
@@ -12,7 +11,7 @@ import {
 const route = new Hono();
 
 // 获取配置公开接口
-route.get("/", anonymousAccessMiddleware, getExamConfigController);
+route.get("/", getExamConfigController);
 
 // 需要管理员权限
 route.get("/all", authMiddleware, requirePermission("LOCK_VIEW_ALL"), getAllExamConfigsController);

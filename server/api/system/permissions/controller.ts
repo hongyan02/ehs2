@@ -108,7 +108,7 @@ export const getPermissionDefinitionsController = async (c: Context) => {
 
 export const getPermissionDefinitionByIdController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         if (Number.isNaN(id)) {
             return c.json({ success: false, message: "无效的ID" }, 400);
         }
@@ -159,7 +159,7 @@ export const createPermissionDefinitionController = async (c: Context) => {
 
 export const updatePermissionDefinitionController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         if (Number.isNaN(id)) {
             return c.json({ success: false, message: "无效的ID" }, 400);
         }
@@ -200,7 +200,7 @@ export const updatePermissionDefinitionController = async (c: Context) => {
 
 export const deletePermissionDefinitionController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         if (Number.isNaN(id)) {
             return c.json({ success: false, message: "无效的ID" }, 400);
         }
@@ -249,7 +249,7 @@ export const getUserPermissionsController = async (c: Context) => {
 
 export const getUserPermissionByIdController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         if (Number.isNaN(id)) {
             return c.json({ success: false, message: "无效的ID" }, 400);
         }
@@ -296,7 +296,7 @@ export const createUserPermissionController = async (c: Context) => {
 
 export const updateUserPermissionController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         if (Number.isNaN(id)) {
             return c.json({ success: false, message: "无效的ID" }, 400);
         }
@@ -336,7 +336,7 @@ export const updateUserPermissionController = async (c: Context) => {
 
 export const deleteUserPermissionController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         if (Number.isNaN(id)) {
             return c.json({ success: false, message: "无效的ID" }, 400);
         }

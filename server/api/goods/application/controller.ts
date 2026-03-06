@@ -141,7 +141,7 @@ export const getPendingApplicationsController = async (c: Context) => {
 
 export const getApplicationByIdController = async (c: Context) => {
   try {
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(c.req.param("id") || "");
     if (Number.isNaN(id)) {
       return c.json({ success: false, message: "无效的ID" }, 400);
     }
@@ -196,7 +196,7 @@ export const createApplicationController = async (c: Context) => {
 
 export const updateApplicationController = async (c: Context) => {
   try {
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(c.req.param("id") || "");
     if (Number.isNaN(id)) {
       return c.json({ success: false, message: "无效的ID" }, 400);
     }
@@ -246,7 +246,7 @@ export const updateApplicationController = async (c: Context) => {
 
 export const deleteApplicationController = async (c: Context) => {
   try {
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(c.req.param("id") || "");
     if (Number.isNaN(id)) {
       return c.json({ success: false, message: "无效的ID" }, 400);
     }

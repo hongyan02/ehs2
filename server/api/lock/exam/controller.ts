@@ -68,7 +68,7 @@ export const submitExamResultController = async (c: Context) => {
 
 export const getExamResultController = async (c: Context) => {
   try {
-    const applicationId = parseInt(c.req.param("applicationId"));
+    const applicationId = parseInt(c.req.param("applicationId") || "");
     if (Number.isNaN(applicationId)) {
       return c.json({ success: false, message: "无效的申请ID" }, 400);
     }
@@ -84,7 +84,7 @@ export const getExamResultController = async (c: Context) => {
 // Apply for practice exam controller
 export const applyPracticeExamController = async (c: Context) => {
   try {
-    const applicationId = parseInt(c.req.param("applicationId"));
+    const applicationId = parseInt(c.req.param("applicationId") || "");
     if (Number.isNaN(applicationId)) {
       return c.json({ success: false, message: "无效的申请ID" }, 400);
     }

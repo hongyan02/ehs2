@@ -65,7 +65,7 @@ export async function proxy(request: NextRequest) {
   try {
     // 3. Verify token
     const jwtSecret = process.env.JWT_SECRET || "default_secret_please_change";
-    const payload = await verify(Ptoken, jwtSecret);
+    const payload = await verify(Ptoken, jwtSecret, "HS256");
 
     // 4. Check permissions - 动态获取权限映射
     const PERMISSION_MAP = await getPermissionMap();

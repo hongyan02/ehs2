@@ -76,7 +76,7 @@ export const getDutyPersonsController = async (c: Context) => {
 
 export const getDutyPersonByIdController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         if (Number.isNaN(id)) {
             return c.json({ success: false, message: "无效的ID" }, 400);
         }
@@ -118,7 +118,7 @@ export const createDutyPersonController = async (c: Context) => {
 
 export const updateDutyPersonController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         if (Number.isNaN(id)) {
             return c.json({ success: false, message: "无效的ID" }, 400);
         }
@@ -152,7 +152,7 @@ export const updateDutyPersonController = async (c: Context) => {
 
 export const deleteDutyPersonController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         if (Number.isNaN(id)) {
             return c.json({ success: false, message: "无效的ID" }, 400);
         }

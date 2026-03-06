@@ -51,7 +51,7 @@ export const createConfigController = async (c: Context) => {
 };
 
 export const updateConfigController = async (c: Context) => {
-  const id = parseInt(c.req.param("id"));
+  const id = parseInt(c.req.param("id") || "");
   if (isNaN(id)) {
     return c.json({ success: false, message: "无效的ID" }, 400);
   }
@@ -65,7 +65,7 @@ export const updateConfigController = async (c: Context) => {
 };
 
 export const deleteConfigController = async (c: Context) => {
-  const id = parseInt(c.req.param("id"));
+  const id = parseInt(c.req.param("id") || "");
   if (isNaN(id)) {
     return c.json({ success: false, message: "无效的ID" }, 400);
   }

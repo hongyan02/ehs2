@@ -511,7 +511,6 @@ export async function exportPracticeRecords(applicationIds: number[]) {
   const XLSX = require("xlsx");
   const fs = require("fs");
   const path = require("path");
-  const os = require("os");
 
   // Get applications by IDs with all details
   const applications = await Promise.all(
@@ -559,21 +558,21 @@ export async function exportPracticeRecords(applicationIds: number[]) {
 
   const validApplications = applications.filter(Boolean);
 
-  // Read template file as buffer
+  // Read template as buffer
   const templatePath = path.join(process.cwd(), "public", "安全锁申请与发放表.xlsx");
   const templateBuffer = fs.readFileSync(templatePath);
 
-  // Read the template buffer
-  const workbook = XLSX.read(templateBuffer, { type: "buffer" });
+  // Open from buffer (read workbook from buffer, preserve cell styles)
+  const workbook = XLSX.read(templateBuffer, { type: "buffer", cellStyles: true });
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
 
-  // Start from row 6 (Excel row 6 = index 5, row 1-5 are template headers)
-  const startRow = 6;
+  // The template has headers in rows 1-5 (0-indexed: 0-4)
+  // Data starts from row 6 (0-indexed: 5)
+  const dataStartRow = 6; // 1-indexed Excel row
 
-  // Fill in data for each application
-  validApplications.forEach((app: any, index: number) => {
-    const row = startRow + index;
-    const examResult = app.examResult;
+  // Prepare data rows
+  const dataRows = validApplications.map((app: any, index: number) => {
+    const examResult = app.examResult || {};
     const lockDetails = app.lockDetails || [];
 
     // Check if has red or yellow locks
@@ -583,40 +582,51 @@ export async function exportPracticeRecords(applicationIds: number[]) {
     // Get all lock numbers
     const allLockNumbers = lockDetails.map((lock: any) => lock.lockNumber).join(", ");
 
-    // A: 序号
-    worksheet[`A${row}`] = { t: "n", v: index + 1 };
-    // B: 产线
-    worksheet[`B${row}`] = { t: "s", v: app.productionLine || "" };
-    // C: 部门
-    worksheet[`C${row}`] = { t: "s", v: app.department || "" };
-    // D: 工序
-    worksheet[`D${row}`] = { t: "s", v: app.process || "" };
-    // E: 班组
-    worksheet[`E${row}`] = { t: "s", v: app.team || "" };
-    // F: 所属经理（第二级审批人/部门长）
-    worksheet[`F${row}`] = { t: "s", v: app.level2Approver || "" };
-    // G: 姓名
-    worksheet[`G${row}`] = { t: "s", v: app.applicantName || "" };
-    // H: 工号
-    worksheet[`H${row}`] = { t: "s", v: app.applicantNo || "" };
-    // I: 联系电话
-    worksheet[`I${row}`] = { t: "s", v: app.phone || "" };
-    // J: 理论得分
-    worksheet[`J${row}`] = { t: "n", v: examResult?.score ?? 0 };
-    // L: 理论考核情况
-    worksheet[`L${row}`] = { t: "s", v: examResult?.passed === 1 ? "通过" : "未通过" };
-    // M: 实操得分
-    worksheet[`M${row}`] = { t: "n", v: examResult?.practiceScore ?? 0 };
-    // P: 红色锁具勾选（✓表示有红色锁）
-    worksheet[`P${row}`] = { t: "s", v: hasRedLock ? "✓" : "" };
-    // Q: 黄色锁具勾选（✓表示有黄色锁）
-    worksheet[`Q${row}`] = { t: "s", v: hasYellowLock ? "✓" : "" };
-    // R: 锁具编号
-    worksheet[`R${row}`] = { t: "s", v: allLockNumbers };
+    return {
+      序号: index + 1,
+      产线: app.productionLine || "",
+      部门: app.department || "",
+      工序: app.process || "",
+      班组: app.team || "",
+      所属经理: app.level2Approver || "",
+      姓名: app.applicantName || "",
+      工号: app.applicantNo || "",
+      联系电话: app.phone || "",
+      理论培训得分: examResult.score ?? 0,
+      实操培训得分: examResult.practiceScore ?? 0,
+      红色: hasRedLock ? "✓" : "",
+      黄色: hasYellowLock ? "✓" : "",
+      锁具编号: allLockNumbers
+    };
   });
 
-  // Write to buffer
-  const outputBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
+  // Write data to worksheet starting from dataStartRow
+  // Column mapping: A=序号, B=产线, C=部门, D=工序, E=班组, F=所属经理, G=姓名, H=工号, I=联系电话
+  // J=理论培训得分, L=实操培训得分, R=锁具编号, P=红色, Q=黄色
+  dataRows.forEach((row: any, rowIndex: number) => {
+    const excelRow = dataStartRow + rowIndex;
+    worksheet[`A${excelRow}`] = { t: "n", v: row.序号 };
+    worksheet[`B${excelRow}`] = { t: "s", v: row.产线 };
+    worksheet[`C${excelRow}`] = { t: "s", v: row.部门 };
+    worksheet[`D${excelRow}`] = { t: "s", v: row.工序 };
+    worksheet[`E${excelRow}`] = { t: "s", v: row.班组 };
+    worksheet[`F${excelRow}`] = { t: "s", v: row.所属经理 };
+    worksheet[`G${excelRow}`] = { t: "s", v: row.姓名 };
+    worksheet[`H${excelRow}`] = { t: "s", v: row.工号 };
+    worksheet[`I${excelRow}`] = { t: "s", v: row.联系电话 };
+    worksheet[`J${excelRow}`] = { t: "n", v: row.理论培训得分 };
+    worksheet[`L${excelRow}`] = { t: "n", v: row.实操培训得分 };
+    worksheet[`P${excelRow}`] = { t: "s", v: row.红色 };
+    worksheet[`Q${excelRow}`] = { t: "s", v: row.黄色 };
+    worksheet[`R${excelRow}`] = { t: "s", v: row.锁具编号 };
+  });
 
-  return outputBuffer;
+  // Update the range if we have more data than the original template
+  const newRange = `A1:T${dataStartRow + dataRows.length - 1}`;
+  worksheet["!ref"] = newRange;
+
+  // Write to buffer (preserve cell styles)
+  const exlBuf = XLSX.write(workbook, { bookType: "xlsx", type: "buffer", cellStyles: true });
+
+  return exlBuf;
 }

@@ -40,7 +40,7 @@ export const createKpiController = async (c: Context) => {
 
 export const updateKpiController = async (c: Context) => {
     try {
-        const id = parseInt(c.req.param("id"));
+        const id = parseInt(c.req.param("id") || "");
         const body = await c.req.json();
         const result = await updateKpiRecord(id, body);
         return c.json({ success: true, data: result });
