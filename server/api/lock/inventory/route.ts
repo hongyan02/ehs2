@@ -25,6 +25,6 @@ route.get("/", authMiddleware, requirePermission("LOCK_VIEW_ALL"), async (c: any
 });
 
 // 更新库存状态
-route.patch("/", authMiddleware, requirePermission("LOCK_ADMIN"), updateInventoryStatusController);
+route.patch("/", authMiddleware, requirePermission("LOCK_VIEW_ALL"), updateInventoryStatusController);
 
 export default route;

@@ -14,8 +14,8 @@ const route = new Hono();
 // 所有接口需要登录
 route.get("/", authMiddleware, getConfigsController);
 route.get("/processes", authMiddleware, getProcessConfigsController);
-route.post("/", authMiddleware, requirePermission("ADMIN"), createConfigController);
-route.put("/:id", authMiddleware, requirePermission("ADMIN"), updateConfigController);
-route.delete("/:id", authMiddleware, requirePermission("ADMIN"), deleteConfigController);
+route.post("/", authMiddleware, requirePermission("LOCK_VIEW_ALL"), createConfigController);
+route.put("/:id", authMiddleware, requirePermission("LOCK_VIEW_ALL"), updateConfigController);
+route.delete("/:id", authMiddleware, requirePermission("LOCK_VIEW_ALL"), deleteConfigController);
 
 export default route;
