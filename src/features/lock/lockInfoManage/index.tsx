@@ -357,7 +357,9 @@ function ProcessTeamConfigTab() {
   };
 
   // 获取选中工序下的班组
-  const selectedProcessTeams = teamConfigs?.filter(t => t.processId === selectedProcessId) || [];
+  const selectedProcessTeams = selectedProcessId
+    ? teamConfigs?.filter(t => t.processId === selectedProcessId) || []
+    : teamConfigs?.filter(t => !t.processId) || [];
 
   // 选中工序
   const selectedProcess = processConfigs?.find(p => p.id === selectedProcessId);

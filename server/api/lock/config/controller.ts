@@ -13,6 +13,7 @@ const createConfigSchema = z.object({
   type: z.enum(["department", "process", "team"]),
   name: z.string().min(1),
   code: z.string().optional(),
+  processId: z.number().optional(),
   managerName: z.string().optional(),
   managerNo: z.string().optional(),
   safetyEngineerName: z.string().optional(),
@@ -24,6 +25,7 @@ const createConfigSchema = z.object({
 const updateConfigSchema = z.object({
   name: z.string().min(1).optional(),
   code: z.string().optional(),
+  processId: z.number().optional(),
   managerName: z.string().optional(),
   managerNo: z.string().optional(),
   safetyEngineerName: z.string().optional(),
