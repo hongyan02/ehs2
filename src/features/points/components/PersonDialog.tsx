@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
     Dialog,
@@ -66,7 +66,14 @@ export default function PersonDialog({
         })),
         [userList]);
 
-    const { register, handleSubmit, reset, setValue, watch, control } = useForm<PersonFormValues>({
+    const {
+        register,
+        handleSubmit,
+        reset,
+        setValue,
+        control,
+        formState: { errors },
+    } = useForm<PersonFormValues>({
         defaultValues: {
             no: "",
             name: "",
@@ -74,9 +81,6 @@ export default function PersonDialog({
             active: "1",
         },
     });
-
-    const [selectedUserOption, setSelectedUserOption] = useState<Option | undefined>(undefined);
-    const [selectedNoOption, setSelectedNoOption] = useState<Option | undefined>(undefined);
 
     useEffect(() => {
         if (open) {
@@ -87,14 +91,6 @@ export default function PersonDialog({
                     dept: person.dept || "",
                     active: String(person.active),
                 });
-                // Initialize autocomplete selected option for edit mode if needed
-                // Note: userNameOptions might need to be searched if we want to show it as "selected"
-                // But for simple string match:
-                const matched = userNameOptions.find(u => u.label === person.name);
-                setSelectedUserOption(matched ? matched : { label: person.name, value: person.name });
-                // 工号选项
-                const noMatched = userNoOptions.find(u => u.value === person.no);
-                setSelectedNoOption(noMatched ? noMatched : { label: person.no, value: person.no });
             } else {
                 reset({
                     no: "",
@@ -102,44 +98,33 @@ export default function PersonDialog({
                     dept: "",
                     active: "1",
                 });
-                setSelectedUserOption(undefined);
-                setSelectedNoOption(undefined);
             }
         }
-    }, [open, person, reset, userNameOptions, userNoOptions]);
+    }, [open, person, reset]);
 
     const handleClose = (nextOpen: boolean) => {
         onOpenChange(nextOpen);
     };
 
-    const handleNameChange = (nickName: string) => {
-        const selectedUser = userList.find((user) => user.nickName === nickName);
+    const handleNameChange = (option: Option) => {
+        const selectedUser = userList.find((user) => user.nickName === option.value);
+        setValue("name", option.value, { shouldDirty: true, shouldValidate: true });
+
         if (selectedUser) {
-            setValue("name", selectedUser.nickName);
-            setValue("no", selectedUser.userName);
-            if (selectedUser.deptName) {
-                setValue("dept", selectedUser.deptName);
-            }
-            // 同步更新工号的选中状态
-            setSelectedNoOption({ label: selectedUser.userName, value: selectedUser.userName });
+            setValue("no", selectedUser.userName, { shouldDirty: true, shouldValidate: true });
+            setValue("dept", selectedUser.deptName || "", { shouldDirty: true });
         }
     };
 
-    // 处理工号变化的函数
-    const handleNoChange = (no: string) => {
-        const selectedUser = userList.find((user) => user.userName === no);
+    const handleNoChange = (option: Option) => {
+        const selectedUser = userList.find((user) => user.userName === option.value);
+        setValue("no", option.value, { shouldDirty: true, shouldValidate: true });
+
         if (selectedUser) {
-            setValue("no", selectedUser.userName);
-            setValue("name", selectedUser.nickName);
-            if (selectedUser.deptName) {
-                setValue("dept", selectedUser.deptName);
-            }
-            // 同步更新姓名的选中状态
-            setSelectedUserOption({ label: selectedUser.nickName, value: selectedUser.nickName });
+            setValue("name", selectedUser.nickName, { shouldDirty: true, shouldValidate: true });
+            setValue("dept", selectedUser.deptName || "", { shouldDirty: true });
         }
     };
-
-    const activeValue = watch("active");
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -153,46 +138,50 @@ export default function PersonDialog({
                         <Controller
                             control={control}
                             name="name"
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <AutoComplete
-                                    options={userNameOptions}
-                                    placeholder="选择姓名"
-                                    emptyMessage="没有匹配的姓名"
-                                    value={selectedUserOption}
-                                    onValueChange={(option) => {
-                                        setSelectedUserOption(option);
-                                        field.onChange(option.value);
-                                        handleNameChange(option.value);
-                                    }}
-                                    disabled={!!person} // Disable name edit if editing existing person? Usually identity keys shouldn't change easily.
-                                />
-                            )}
+                            rules={{ required: "请输入姓名" }}
+                            render={({ field }) => {
+                                const selectedUserOption =
+                                    userNameOptions.find((option) => option.value === field.value) ??
+                                    (field.value ? { label: field.value, value: field.value } : undefined);
+
+                                return (
+                                    <AutoComplete
+                                        options={userNameOptions}
+                                        placeholder="选择或输入姓名"
+                                        emptyMessage="没有匹配的姓名"
+                                        value={selectedUserOption}
+                                        onValueChange={handleNameChange}
+                                        disabled={!!person}
+                                    />
+                                );
+                            }}
                         />
-                        <input type="hidden" {...register("name", { required: true })} />
+                        {errors.name ? <p className="mt-2 text-sm text-red-500">{errors.name.message}</p> : null}
                     </div>
                     <div>
                         <Label htmlFor="no" className="mb-2 block">工号</Label>
                         <Controller
                             control={control}
                             name="no"
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <AutoComplete
-                                    options={userNoOptions}
-                                    placeholder="选择或输入工号"
-                                    emptyMessage="没有匹配的工号"
-                                    value={selectedNoOption}
-                                    onValueChange={(option) => {
-                                        setSelectedNoOption(option);
-                                        field.onChange(option.value);
-                                        handleNoChange(option.value);
-                                    }}
-                                    disabled={!!person}
-                                />
-                            )}
+                            rules={{ required: "请输入工号" }}
+                            render={({ field }) => {
+                                const selectedNoOption =
+                                    userNoOptions.find((option) => option.value === field.value) ??
+                                    (field.value ? { label: field.value, value: field.value } : undefined);
+
+                                return (
+                                    <AutoComplete
+                                        options={userNoOptions}
+                                        placeholder="选择或输入工号"
+                                        emptyMessage="没有匹配的工号"
+                                        value={selectedNoOption}
+                                        onValueChange={handleNoChange}
+                                        disabled={!!person}
+                                    />
+                                );
+                            }}
                         />
-                        <input type="hidden" {...register("no", { required: true })} />
+                        {errors.no ? <p className="mt-2 text-sm text-red-500">{errors.no.message}</p> : null}
                     </div>
                     <div>
                         <Label htmlFor="dept" className="mb-2 block">部门</Label>
@@ -200,18 +189,21 @@ export default function PersonDialog({
                     </div>
                     <div>
                         <Label className="mb-2 block">状态</Label>
-                        <Select
-                            value={activeValue}
-                            onValueChange={(val) => setValue("active", val)}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="选择状态" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="1">启用</SelectItem>
-                                <SelectItem value="0">禁用</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <Controller
+                            control={control}
+                            name="active"
+                            render={({ field }) => (
+                                <Select value={field.value} onValueChange={field.onChange}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="选择状态" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="1">启用</SelectItem>
+                                        <SelectItem value="0">禁用</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        />
                     </div>
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={() => handleClose(false)}>
