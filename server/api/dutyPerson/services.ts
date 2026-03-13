@@ -16,14 +16,12 @@ export interface GetDutyPersonsParams {
   pageSize?: number;
   name?: string;
   no?: string;
-  shift?: number;
 }
 
 export interface CreateDutyPersonParams {
   name: string;
   no: string;
   position?: string | null;
-  shift: number;
   phone?: string | null;
   status?: number;
 }
@@ -33,12 +31,11 @@ export interface UpdateDutyPersonParams {
   name?: string;
   no?: string;
   position?: string | null;
-  shift?: number;
   phone?: string | null;
 }
 
 export const getDutyPersons = async (params: GetDutyPersonsParams) => {
-  const { page = 1, pageSize = 10, name, no, shift } = params;
+  const { page = 1, pageSize = 10, name, no } = params;
 
   const conditions: (ReturnType<typeof eq> | ReturnType<typeof like>)[] = [];
 
@@ -50,10 +47,6 @@ export const getDutyPersons = async (params: GetDutyPersonsParams) => {
   if (no) {
     const fuzzy = `%${no}%`;
     conditions.push(like(dutyStaff.no, fuzzy));
-  }
-
-  if (shift !== undefined) {
-    conditions.push(eq(dutyStaff.shift, shift));
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -100,7 +93,6 @@ export const createDutyPerson = async (params: CreateDutyPersonParams) => {
       name: params.name,
       no: params.no,
       position: params.position ?? null,
-      shift: params.shift,
       phone: params.phone ?? null,
       status: params.status ?? 1,
     })
@@ -116,7 +108,6 @@ export const updateDutyPerson = async (params: UpdateDutyPersonParams) => {
   if (rest.name !== undefined) updateData.name = rest.name;
   if (rest.no !== undefined) updateData.no = rest.no;
   if (rest.position !== undefined) updateData.position = rest.position;
-  if (rest.shift !== undefined) updateData.shift = rest.shift;
   if (rest.phone !== undefined) updateData.phone = rest.phone;
 
   if (Object.keys(updateData).length === 0) {

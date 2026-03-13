@@ -24,14 +24,14 @@ pnpm dev
 
 ### 常用命令
 
-| 命令 | 说明 |
-|------|------|
-| `pnpm dev` | 启动开发服务器 |
-| `pnpm build` | 构建生产版本 |
-| `pnpm start` | 运行生产版本（端口 802） |
-| `pnpm db:generate` | 生成数据库迁移文件 |
-| `pnpm db:migrate` | 执行数据库迁移 |
-| `pnpm lint` | 代码检查 |
+| 命令               | 说明                     |
+| ------------------ | ------------------------ |
+| `pnpm dev`         | 启动开发服务器           |
+| `pnpm build`       | 构建生产版本             |
+| `pnpm start`       | 运行生产版本（端口 802） |
+| `pnpm db:generate` | 生成数据库迁移文件       |
+| `pnpm db:migrate`  | 执行数据库迁移           |
+| `pnpm lint`        | 代码检查                 |
 
 ## 环境变量
 
@@ -115,7 +115,7 @@ API：`POST /api/system/permissions/users`
 permissionsRouter.get(
   "/definitions",
   requirePermission("ADMIN"),
-  getPermissionDefinitionsController
+  getPermissionDefinitionsController,
 );
 ```
 
@@ -145,7 +145,6 @@ permissionsRouter.get(
 - 锁具管理：申请、审批、库存（`/lockApplication`、`/lockApproval`、`/lockInventory`）
 - Webhook：值班日志推送、带班通知、日志稽查（`server/api/webhook/*`）
 - 认证：IMS 登录、权限 Token（`server/api/auth`）
-- 定时任务：任务管理与 Worker（`server/utils/scheduler`、`/system/corn`）
 
 ### 生产环境
 
@@ -153,5 +152,3 @@ permissionsRouter.get(
 pnpm build
 pnpm start
 ```
-
-

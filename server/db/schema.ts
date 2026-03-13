@@ -13,9 +13,6 @@ export const dutyStaff = sqliteTable("dutyStaff", {
   // 职位
   position: text("position"),
 
-  // 班次：0=白班，1=夜班
-  shift: integer("shift").notNull(),
-
   // 电话
   phone: text("phone"),
 

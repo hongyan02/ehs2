@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateKpi, useKpiList, useKpiRecords, useSyncKpi, useUpdateKpi } from "../query";
 import { toast } from "sonner";
 import { Loader2, Pencil, Plus } from "lucide-react"; // Pencil for edit
@@ -28,7 +29,9 @@ interface KpiRecord {
 }
 
 export default function KpiManagement() {
+    const currentMonth = (new Date().getMonth() + 1).toString();
     const [year, setYear] = useState(new Date().getFullYear().toString());
+    const [month, setMonth] = useState(currentMonth);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingRecord, setEditingRecord] = useState<KpiRecord | null>(null);
 
@@ -43,7 +46,7 @@ export default function KpiManagement() {
     // External API Query (for sync)
     // We only fetch this when user clicks Sync
     const [isSyncing, setIsSyncing] = useState(false);
-    const { refetch: fetchExternalKpi } = useKpiList({ nf: year, mon: "11" });
+    const { refetch: fetchExternalKpi } = useKpiList({ nf: year, mon: month });
 
     const handleSync = async () => {
         setIsSyncing(true);
@@ -129,7 +132,23 @@ export default function KpiManagement() {
                         onChange={e => setYear(e.target.value)}
                         className="w-32"
                     />
-                    <span className="text-sm text-gray-500 font-bold">年份 KPI</span>
+                    <span className="text-sm text-gray-500 font-bold">年份</span>
+                    <Select value={month} onValueChange={setMonth}>
+                        <SelectTrigger className="w-24">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {Array.from({ length: 12 }, (_, i) => {
+                                const m = (i + 1).toString();
+                                return (
+                                    <SelectItem key={m} value={m}>
+                                        {m}月
+                                    </SelectItem>
+                                );
+                            })}
+                        </SelectContent>
+                    </Select>
+                    <span className="text-sm text-gray-500 font-bold">KPI</span>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" onClick={handleAdd}>

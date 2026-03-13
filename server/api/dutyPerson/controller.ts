@@ -14,25 +14,6 @@ const optionalText = z
     .optional()
     .transform((val) => (val?.trim() ? val.trim() : undefined));
 
-const shiftQuerySchema = z
-    .string()
-    .optional()
-    .transform((val) => {
-        if (!val) return undefined;
-        const parsed = parseInt(val, 10);
-        return Number.isNaN(parsed) ? undefined : parsed;
-    })
-    .refine((val) => val === undefined || val === 0 || val === 1, {
-        message: "班次必须为0或1",
-    });
-
-const shiftBodySchema = z
-    .union([z.number(), z.string()])
-    .transform((val) => (typeof val === "string" ? parseInt(val, 10) : val))
-    .refine((val) => val === 0 || val === 1, {
-        message: "班次必须为0或1",
-    });
-
 const getDutyPersonsSchema = z.object({
     page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)),
     pageSize: z
@@ -41,14 +22,12 @@ const getDutyPersonsSchema = z.object({
         .transform((val) => (val ? parseInt(val, 10) : 10)),
     name: optionalText,
     no: optionalText,
-    shift: shiftQuerySchema,
 });
 
 const createDutyPersonSchema = z.object({
     name: z.string().min(1, "姓名不能为空"),
     no: z.string().min(1, "工号不能为空"),
     position: optionalText,
-    shift: shiftBodySchema,
     phone: optionalText,
 });
 
@@ -56,7 +35,6 @@ const updateDutyPersonSchema = z.object({
     name: z.string().min(1, "姓名不能为空").optional(),
     no: z.string().min(1, "工号不能为空").optional(),
     position: optionalText,
-    shift: shiftBodySchema.optional(),
     phone: optionalText,
 });
 
@@ -136,7 +114,6 @@ export const updateDutyPersonController = async (c: Context) => {
         if (validated.name !== undefined) payload.name = validated.name;
         if (validated.no !== undefined) payload.no = validated.no;
         if (validated.position !== undefined) payload.position = validated.position ?? null;
-        if (validated.shift !== undefined) payload.shift = validated.shift;
         if (validated.phone !== undefined) payload.phone = validated.phone ?? null;
 
         const result = await updateDutyPerson(payload);

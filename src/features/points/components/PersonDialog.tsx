@@ -47,12 +47,22 @@ export default function PersonDialog({
     const { userList } = useUserListStore();
 
     // Memoize options to avoid unnecessary re-renders
-    const userOptions: Option[] = useMemo(() =>
+    const userNameOptions: Option[] = useMemo(() =>
         userList.map((user) => ({
             label: user.nickName,
             value: user.nickName,
             userName: user.userName,
-            dept: user.deptName || "", // Assuming deptName exists, otherwise default empty
+            dept: user.deptName || "",
+        })),
+        [userList]);
+
+    // 工号选项列表
+    const userNoOptions: Option[] = useMemo(() =>
+        userList.map((user) => ({
+            label: user.userName,
+            value: user.userName,
+            nickName: user.nickName,
+            dept: user.deptName || "",
         })),
         [userList]);
 
@@ -66,6 +76,7 @@ export default function PersonDialog({
     });
 
     const [selectedUserOption, setSelectedUserOption] = useState<Option | undefined>(undefined);
+    const [selectedNoOption, setSelectedNoOption] = useState<Option | undefined>(undefined);
 
     useEffect(() => {
         if (open) {
@@ -77,10 +88,13 @@ export default function PersonDialog({
                     active: String(person.active),
                 });
                 // Initialize autocomplete selected option for edit mode if needed
-                // Note: userOptions might need to be searched if we want to show it as "selected"
+                // Note: userNameOptions might need to be searched if we want to show it as "selected"
                 // But for simple string match:
-                const matched = userOptions.find(u => u.label === person.name);
+                const matched = userNameOptions.find(u => u.label === person.name);
                 setSelectedUserOption(matched ? matched : { label: person.name, value: person.name });
+                // 工号选项
+                const noMatched = userNoOptions.find(u => u.value === person.no);
+                setSelectedNoOption(noMatched ? noMatched : { label: person.no, value: person.no });
             } else {
                 reset({
                     no: "",
@@ -89,9 +103,10 @@ export default function PersonDialog({
                     active: "1",
                 });
                 setSelectedUserOption(undefined);
+                setSelectedNoOption(undefined);
             }
         }
-    }, [open, person, reset, userOptions]);
+    }, [open, person, reset, userNameOptions, userNoOptions]);
 
     const handleClose = (nextOpen: boolean) => {
         onOpenChange(nextOpen);
@@ -105,6 +120,22 @@ export default function PersonDialog({
             if (selectedUser.deptName) {
                 setValue("dept", selectedUser.deptName);
             }
+            // 同步更新工号的选中状态
+            setSelectedNoOption({ label: selectedUser.userName, value: selectedUser.userName });
+        }
+    };
+
+    // 处理工号变化的函数
+    const handleNoChange = (no: string) => {
+        const selectedUser = userList.find((user) => user.userName === no);
+        if (selectedUser) {
+            setValue("no", selectedUser.userName);
+            setValue("name", selectedUser.nickName);
+            if (selectedUser.deptName) {
+                setValue("dept", selectedUser.deptName);
+            }
+            // 同步更新姓名的选中状态
+            setSelectedUserOption({ label: selectedUser.nickName, value: selectedUser.nickName });
         }
     };
 
@@ -125,7 +156,7 @@ export default function PersonDialog({
                             rules={{ required: true }}
                             render={({ field }) => (
                                 <AutoComplete
-                                    options={userOptions}
+                                    options={userNameOptions}
                                     placeholder="选择姓名"
                                     emptyMessage="没有匹配的姓名"
                                     value={selectedUserOption}
@@ -142,7 +173,26 @@ export default function PersonDialog({
                     </div>
                     <div>
                         <Label htmlFor="no" className="mb-2 block">工号</Label>
-                        <Input id="no" {...register("no", { required: true })} disabled placeholder="自动填充" />
+                        <Controller
+                            control={control}
+                            name="no"
+                            rules={{ required: true }}
+                            render={({ field }) => (
+                                <AutoComplete
+                                    options={userNoOptions}
+                                    placeholder="选择或输入工号"
+                                    emptyMessage="没有匹配的工号"
+                                    value={selectedNoOption}
+                                    onValueChange={(option) => {
+                                        setSelectedNoOption(option);
+                                        field.onChange(option.value);
+                                        handleNoChange(option.value);
+                                    }}
+                                    disabled={!!person}
+                                />
+                            )}
+                        />
+                        <input type="hidden" {...register("no", { required: true })} />
                     </div>
                     <div>
                         <Label htmlFor="dept" className="mb-2 block">部门</Label>
