@@ -96,8 +96,9 @@ export const uploadPracticeFileController = async (c: Context) => {
     const filepath = `${UPLOAD_DIR}/${filename}`;
     fs.writeFileSync(filepath, buffer);
 
-    // 返回文件访问 URL
-    const fileUrl = `/uploads/practice/${filename}`;
+    // 返回文件访问 URL（使用完整 URL）
+    const origin = c.req.header("origin") || `${c.req.schema}://${c.req.host}`;
+    const fileUrl = `${origin}/uploads/practice/${filename}`;
 
     // 保存到考试配置
     await uploadPracticeFile({ url: fileUrl, filename });
