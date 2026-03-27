@@ -40,8 +40,6 @@ pnpm dev
 - `JWT_SECRET`：权限 JWT 签名密钥
 - `DATABASE_URL`：数据库连接字符串（SQLite: `file:./ehs.sqlite`，PostgreSQL: `postgres://...`）
 - `WEBHOOK_BASE_URL`：企业微信 Webhook 基地址（默认 `https://qyapi.weixin.qq.com/cgi-bin/webhook/send`）
-- `SCHEDULER_WORKER_PATH`：可选，定时任务 Worker 路径覆盖
-- `SCHEDULER_MAX_CONCURRENCY`：可选，定时任务并发上限
 - `POSTGRES_URL`：PostgreSQL 数据库连接字符串（使用 PostgreSQL 时需要）
 
 ## 数据库配置
@@ -59,7 +57,6 @@ pnpm dev
 - `src/stores`：全局状态（用户信息、权限）
 - `server/api`：Hono API 模块（route/controller/services 分层）
 - `server/db`：数据库连接与 schema
-- `server/utils/scheduler`：定时任务调度与 Worker
 
 ## API 架构
 
