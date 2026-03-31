@@ -325,18 +325,15 @@ export default function Step1Form({ onNext, defaultValues }: Step1FormProps) {
             name="department"
             control={control}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="请选择部门" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departmentOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <AutoComplete
+                options={departmentOptions}
+                placeholder="请选择部门"
+                emptyMessage="未找到匹配部门"
+                value={field.value ? { value: field.value, label: field.value } : undefined}
+                onValueChange={(option) => {
+                  field.onChange(option?.label || "");
+                }}
+              />
             )}
           />
         ) : (
@@ -412,22 +409,16 @@ export default function Step1Form({ onNext, defaultValues }: Step1FormProps) {
             name="team"
             control={control}
             render={({ field }) => (
-              <Select
-                value={field.value}
-                onValueChange={field.onChange}
+              <AutoComplete
+                options={teamOptions}
+                placeholder={watchProcess ? "请选择班组" : "请先选择工序"}
+                emptyMessage="未找到匹配班组"
+                value={field.value ? { value: field.value, label: field.value } : undefined}
+                onValueChange={(option) => {
+                  field.onChange(option?.label || "");
+                }}
                 disabled={!watchProcess}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={watchProcess ? "请选择班组" : "请先选择工序"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {teamOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             )}
           />
         ) : (
